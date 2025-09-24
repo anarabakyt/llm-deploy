@@ -1,0 +1,174 @@
+Пример json для моделей который приходит с бэкенда
+url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/models/:userId
+{
+    "models": [
+      {
+        "id": "1",
+        "user_id": "test_109876543210987654321",
+        "created_at": "2025-09-21T16:47:16.864Z",
+        "is_fixed": false,
+        "name": "GPT",
+        "model_url": null
+      },
+      {
+        "id": "2",
+        "user_id": "test_109876543210987654321",
+        "created_at": "2025-09-21T16:47:38.213Z",
+        "is_fixed": false,
+        "name": "Claude",
+        "model_url": null
+      },
+      {
+        "id": "3",
+        "user_id": "test_109876543210987654321",
+        "created_at": "2025-09-21T16:48:17.410Z",
+        "is_fixed": false,
+        "name": "Deepseek",
+        "model_url": null
+      },
+      {
+        "id": "4",
+        "user_id": "test_109876543210987654321",
+        "created_at": "2025-09-21T16:48:37.965Z",
+        "is_fixed": true,
+        "name": "ASK_AI",
+        "model_url": null
+      }
+    ]
+  }
+
+Пример json для чатов который приходит с бэкенда
+url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/chats/:userId
+{
+    "chats": [
+      {
+        "id": "1",
+        "created_at": "2025-09-22T08:34:17.329Z",
+        "model_id": "1"
+      },
+      {
+        "id": "2",
+        "created_at": "2025-09-22T08:34:24.661Z",
+        "model_id": "2"
+      }
+    ]
+  }
+
+Пример json для сообщений который приходят с бэкенда
+url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/messages/:chatId
+{
+    "messages": [
+      {
+        "message_with_responses": {
+          "id": 7,
+          "author": "user",
+          "chat_id": 4,
+          "content": "hi",
+          "created_at": "2025-09-23T14:49:24.194292+00:00",
+          "model_responses": []
+        }
+      },
+      {
+        "message_with_responses": {
+          "id": 8,
+          "author": "user",
+          "chat_id": 4,
+          "content": "test event",
+          "created_at": "2025-09-23T14:55:43.371267+00:00",
+          "model_responses": []
+        }
+      },
+      {
+        "message_with_responses": {
+          "id": 9,
+          "author": "user",
+          "chat_id": 4,
+          "content": "test event",
+          "created_at": "2025-09-23T14:56:47.477255+00:00",
+          "model_responses": []
+        }
+      },
+      {
+        "message_with_responses": {
+          "id": 10,
+          "author": "user",
+          "chat_id": 4,
+          "content": "test event",
+          "created_at": "2025-09-23T15:05:43.457+00:00",
+          "model_responses": []
+        }
+      },
+      {
+        "message_with_responses": {
+          "id": 13,
+          "author": "model",
+          "chat_id": 4,
+          "content": "",
+          "created_at": "2025-09-23T15:11:22.852927+00:00",
+          "model_responses": [
+            {
+              "id": 5,
+              "content": "Response from gpt",
+              "created_at": "2025-09-23T15:11:22.852927+00:00",
+              "message_id": 13,
+              "model_name": "gpt",
+              "response_time": 1
+            },
+            {
+              "id": 6,
+              "content": "Response from claude",
+              "created_at": "2025-09-23T15:11:22.852927+00:00",
+              "message_id": 13,
+              "model_name": "claude",
+              "response_time": 1
+            },
+            {
+              "id": 7,
+              "content": "Response from deepseek",
+              "created_at": "2025-09-23T15:11:22.852927+00:00",
+              "message_id": 13,
+              "model_name": "deepseek",
+              "response_time": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+
+Примерный json сообщения с ответами моделей:
+{
+    "message_with_responses": {
+      "id": 13,
+      "author": "model",
+      "chat_id": 4,
+      "content": "",
+      "created_at": "2025-09-23T15:11:22.852927+00:00",
+      "model_responses": [
+        {
+          "id": 5,
+          "content": "Response from gpt",
+          "created_at": "2025-09-23T15:11:22.852927+00:00",
+          "message_id": 13,
+          "model_name": "gpt",
+          "response_time": 1
+        },
+        {
+          "id": 6,
+          "content": "Response from claude",
+          "created_at": "2025-09-23T15:11:22.852927+00:00",
+          "message_id": 13,
+          "model_name": "claude",
+          "response_time": 1
+        },
+        {
+          "id": 7,
+          "content": "Response from deepseek",
+          "created_at": "2025-09-23T15:11:22.852927+00:00",
+          "message_id": 13,
+          "model_name": "deepseek",
+          "response_time": 1
+        }
+      ]
+    }
+  }
