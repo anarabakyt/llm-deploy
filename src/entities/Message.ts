@@ -1,12 +1,13 @@
-import type { ModelResponse } from './ModelResponse';
+import type {ModelResponse} from './ModelResponse';
 
 export type MessageAuthor = 'user' | 'model';
 
 export interface Message {
-  id: string | null;
-  chatId: string;
-  author: MessageAuthor;
-  content: string;
-  modelResponses?: ModelResponse[];
-  createdAt: string;
+    id: string | null;
+    chatId: string | null;
+    chatLocalId: string | null;
+    author: MessageAuthor;
+    content: string;
+    modelResponses?: ModelResponse[];
+    createdAt: string;
 }

@@ -1,239 +1,155 @@
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { selectMessages } from '../store/selectors';
-import { addChatWithLocalId, updateChatFromLocalId } from '../store/chatSlice';
-import { addMessage, updateMessagesChatIdFromLocalId, addChatMessagesIfNotExists } from '../store/messageSlice';
-import { useGetChatMessagesQuery, useCreateChatMutation, useSendMessageToModelApiMutation } from '../services';
-import { LocalIdGenerator } from '../utils/localIdGenerator';
-import { MessageBubble } from './MessageBubble';
-import { ChatInput } from './ChatInput';
-import { Loader } from './Loader';
-import type { Chat, Model, Message } from '../entities';
+import React, {useEffect, useState} from 'react';
+import {useAppDispatch, useAppSelector} from '../config/hooks.ts';
+import {
+    selectMessagesByChat,
+    selectMessagesLoading,
+    selectSelectedChatId,
+    selectSelectedChatLocalId,
+    selectSelectedModelIdBySelectedChat,
+    selectSelectedModelUrlBySelectedChat
+} from '../store/selector/selectors.ts';
+import {setChatMessages} from '../store/slice/messageSlice.ts';
+import {useGetChatMessagesQuery} from '../services/rtk';
+import {LocalIdGenerator} from '../utils';
+import {MessageBubble} from './MessageBubble';
+import {ChatInput} from './ChatInput';
+import {ResponseCard} from './ResponseCard';
+import {Loader} from './Loader';
+import type {Chat} from '../entities';
+import {setSelectedChatId, setSelectedChatLocalId} from "../store/slice/chatSlice.ts";
+import {sendMessageThunk} from "../store/thunk/messageThunks.ts";
 
-interface ChatAreaProps {
-  chat: Chat | null;
-  model: Model | null;
-  onSendMessage: (message: string) => void;
-}
+export const ChatArea: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const messages = useAppSelector(selectMessagesByChat);
+    const selectedChatId = useAppSelector(selectSelectedChatId);
+    const selectedChatLocalId = useAppSelector(selectSelectedChatLocalId);
+    const selectedModelId = useAppSelector(selectSelectedModelIdBySelectedChat);
+    const selectedModelUrl = useAppSelector(selectSelectedModelUrlBySelectedChat);
+    const isLoading = useAppSelector(selectMessagesLoading);
 
-export const ChatArea: React.FC<ChatAreaProps> = ({
-  chat,
-  model,
-  onSendMessage,
-}) => {
-  const dispatch = useAppDispatch();
-  const allMessages = useAppSelector(selectMessages);
-  const isLoading = useAppSelector((state) => state.messages.isLoading);
-  
-  // API хуки
-  const [createChat] = useCreateChatMutation();
-  const [sendMessageToModel] = useSendMessageToModelApiMutation();
-  
-  // Состояние для нового чата
-  const [newChat, setNewChat] = useState<Chat | null>(null);
-  const [isNewChat, setIsNewChat] = useState(false);
+    const [newChat, setNewChat] = useState<Chat | null>(null);
+    const [isNewChat, setIsNewChat] = useState(!selectedChatId);
 
-  // Определяем текущий чат
-  const currentChat = isNewChat ? newChat : chat;
-  
-  // Получаем сообщения для текущего чата
-  const messages = currentChat 
-    ? allMessages.filter(msg => {
-        // Для нового чата ищем по localId, для существующего по id
-        if (isNewChat && newChat) {
-          return msg.chatId === newChat.localId;
-        }
-        return msg.chatId === currentChat.id;
-      })
-    : [];
-
-  // Проверяем, есть ли в Redux сообщения с реальными ID (не localId) для этого чата
-  const hasRealMessages = currentChat?.id && messages.some(msg => 
-    msg.chatId === currentChat.id && msg.id && !String(msg.id).startsWith('msg-')
-  );
-
-
-  // Загружаем сообщения для существующего чата только если их нет в Redux
-  const { data: chatMessages, isLoading: messagesLoading } = useGetChatMessagesQuery(
-    currentChat?.id || '',
-    {
-      skip: !currentChat?.id || isNewChat || !!hasRealMessages,
-    }
-  );
-
-  // Создаем новый чат при первом открытии
-  useEffect(() => {
-    if (model && !isNewChat) {
-      // Если чат не выбран (пустая строка) или не существует, создаем новый чат
-      if (!chat || chat.id === '') {
-        const newChatData: Chat = {
-          id: null, // null ID для нового чата
-          modelId: model.id,
-          localId: LocalIdGenerator.generateLocalId(),
-          createdAt: new Date().toISOString(),
-        };
-        setNewChat(newChatData);
-        setIsNewChat(true);
-      }
-    }
-  }, [chat, model, isNewChat]);
-
-  // Обрабатываем переключение чатов
-  useEffect(() => {
-    if (chat && !isNewChat) {
-      // Переключились на существующий чат
-      setNewChat(null);
-      setIsNewChat(false);
-    }
-  }, [chat, isNewChat]);
-
-  // Обновляем сообщения в Redux при загрузке
-  useEffect(() => {
-    if (chatMessages && currentChat && !isNewChat && currentChat.id) {
-      // Добавляем только те сообщения, которых еще нет в Redux
-      dispatch(addChatMessagesIfNotExists({ 
-        chatId: currentChat.id, 
-        messages: chatMessages 
-      }));
-    }
-  }, [chatMessages, currentChat, isNewChat, dispatch]);
-
-  // Загружаем сообщения для существующего чата, если они пустые
-  useEffect(() => {
-    if (currentChat && !isNewChat && currentChat.id && messages.length === 0) {
-      // Если чат существует в Redux по id, но сообщения пустые, загружаем их
-      // Это происходит автоматически через useGetChatMessagesQuery
-    }
-  }, [currentChat, isNewChat, messages.length]);
-
-  // Обработка отправки сообщения
-  const handleSendMessage = async (messageText: string) => {
-    if (!currentChat || !model) return;
-
-    try {
-      // Создаем сообщение пользователя
-      const userMessage: Message = {
-        id: `msg-${Date.now()}`,
-        chatId: isNewChat ? newChat!.localId : currentChat.id!,
-        author: 'user',
-        content: messageText,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Добавляем сообщение пользователя в Redux сразу
-      dispatch(addMessage(userMessage));
-
-      let finalChatId = currentChat.id;
-
-      // Если это новый чат, создаем его на бэкенде
-      if (isNewChat && newChat) {
-        // Создаем чат с LocalId в Redux
-        dispatch(addChatWithLocalId(newChat));
-        
-        // Создаем чат на бэкенде
-        const createdChat = await createChat({ modelId: model.id }).unwrap();
-        
-        // Обновляем чат в Redux с реальным id
-        dispatch(updateChatFromLocalId({ 
-          localId: newChat.localId, 
-          chat: createdChat 
-        }));
-        
-        // Обновляем chatId для всех сообщений этого чата
-        dispatch(updateMessagesChatIdFromLocalId({ 
-          localId: newChat.localId, 
-          newChatId: createdChat.id || '' 
-        }));
-        
-        finalChatId = createdChat.id;
-        setIsNewChat(false);
-      }
-
-      // Отправляем сообщение к модели
-      const modelResponse = await sendMessageToModel({
-        modelUrl: model.modelUrl,
-        chatId: finalChatId!,
-        content: messageText,
-      }).unwrap();
-
-      // Добавляем ответ модели в Redux
-      dispatch(addMessage(modelResponse));
-
-      // Вызываем callback для дополнительной обработки
-      onSendMessage(messageText);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
-  if (!currentChat || !model) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Выберите чат
-          </h3>
-          <p className="text-gray-500">
-            Начните новый разговор с {model?.name || 'моделью'}
-          </p>
-        </div>
-      </div>
+    const {data: reloadedMessages = []} = useGetChatMessagesQuery(
+        {chatId: selectedChatId!},
+        {skip: !selectedChatId || messages.length > 0}
     );
-  }
 
-  return (
-    <div className="flex-1 flex flex-col bg-white">
-      {/* Заголовок чата */}
-      <div className="border-b border-gray-200 p-4">
-        <h2 className="text-lg font-semibold text-gray-800">
-          {model.name}
-        </h2>
-        <p className="text-sm text-gray-500">
-          {isNewChat 
-            ? 'Новый чат' 
-            : `Чат создан ${new Date(currentChat.createdAt).toLocaleDateString()}`
-          }
-        </p>
-      </div>
+    useEffect(() => {
+        if (reloadedMessages.length > 0 && selectedChatId) {
+            dispatch(setChatMessages({chatId: selectedChatId, messages: reloadedMessages}));
+        } else {
+            dispatch(setSelectedChatId(null));
+        }
+    }, [reloadedMessages, selectedChatId, dispatch]);
 
-      {/* Область сообщений */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <p className="text-gray-500">Начните разговор</p>
+    useEffect(() => {
+        if (isNewChat && selectedModelId) {
+            const newChatData: Chat = {
+                id: null,
+                modelId: selectedModelId,
+                localId: LocalIdGenerator.generateLocalId(),
+                createdAt: new Date().toISOString(),
+            };
+            setNewChat(newChatData);
+            dispatch(setSelectedChatLocalId(newChatData.localId));
+        }
+    }, [isNewChat, selectedModelId]);
+
+    const handleSendMessage = async (messageText: string) => {
+        const newChatCopy = newChat ? {...newChat} : null;
+
+        dispatch(
+            sendMessageThunk({
+                messageText,
+                isNewChat: isNewChat,
+                newChat: newChatCopy,
+            })
+        );
+
+        if (isNewChat) {
+            setIsNewChat(false);
+            setNewChat(null);
+        }
+    };
+
+    return (
+        <div className="flex-1 flex flex-col bg-white">
+            {/* Заголовок */}
+            <div className="border-b border-gray-200 p-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                    Спросить ИИ
+                </h2>
+                <p className="text-sm text-gray-500">
+                    Отправьте сообщение, чтобы получить ответы от всех доступных моделей
+                </p>
             </div>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isUser={message.author === 'user'}
+
+            {/* Область сообщений */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                Сравните ответы AI-моделей
+                            </h3>
+                            <p className="text-gray-500 max-w-md">
+                                Задайте вопрос и получите ответы от всех доступных моделей для сравнения их качества и
+                                скорости
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    messages.map((message) => (
+                        <div key={message.id} className="space-y-4">
+                            {/* Сообщение пользователя */}
+                            <MessageBubble
+                                message={message}
+                                isUser={message.author === 'user'}
+                            />
+
+                            {/* Ответы моделей */}
+                            {message.modelResponses && message.modelResponses.length > 0 && (
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-gray-600">
+                                        Ответы моделей:
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {message.modelResponses.map((response) => (
+                                            <ResponseCard
+                                                key={response.modelName}
+                                                response={response}
+                                                messageId={message.id || ''}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
+
+                {isLoading && (
+                    <div className="flex justify-start">
+                        <div className="bg-gray-200 rounded-lg p-3">
+                            <Loader size="sm"/>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Поле ввода */}
+            <ChatInput
+                onSendMessage={handleSendMessage}
+                disabled={isLoading}
+                placeholder="Задайте вопрос для сравнения ответов всех моделей..."
             />
-          ))
-        )}
-        
-        {(isLoading || messagesLoading) && (
-          <div className="flex justify-start">
-            <div className="bg-gray-200 rounded-lg p-3">
-              <Loader size="sm" />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Поле ввода */}
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        disabled={isLoading || messagesLoading}
-        placeholder={`Сообщение для ${model.name}...`}
-      />
-    </div>
-  );
+        </div>
+    );
 };

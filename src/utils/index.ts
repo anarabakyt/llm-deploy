@@ -1,1 +1,1 @@
-export { LocalIdGenerator } from './localIdGenerator';
+export {LocalIdGenerator} from './localIdGenerator';

@@ -1,7 +1,6 @@
 export interface Model {
-  id: string;
-  name: string;
-  modelUrl: string;
-  isFixed?: boolean;
-  createdAt: string;
+    id: string;
+    name: string;
+    modelUrl: string;
+    createdAt: string;
 }

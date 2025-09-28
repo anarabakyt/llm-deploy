@@ -1,6 +1,6 @@
 export interface Chat {
-  id: string | null;
-  modelId: string;
-  localId: string;
-  createdAt: string;
+    id: string | null;
+    localId: string | null;
+    modelId: string;
+    createdAt: string;
 }
