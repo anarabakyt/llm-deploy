@@ -5,7 +5,7 @@ import {Sidebar} from './Sidebar';
 import {ChatArea} from './ChatArea.tsx';
 import {useGetChatsQuery, useGetModelsQuery} from '../services/rtk';
 import type {Chat, Model} from "../entities";
-import {setModels} from "../store/slice/modelSlice.ts";
+import {setModels, setSelectedModelId} from "../store/slice/modelSlice.ts";
 import {setChats} from "../store/slice/chatSlice.ts";
 import {authService} from "../services/authService.ts";
 
@@ -30,6 +30,8 @@ export const Renderer: React.FC = () => {
     useEffect(() => {
         if (modelsData) {
             dispatch(setModels(modelsData));
+            console.log('==> Renderer-useEffect: setSelectedModelId: ', modelsData[0]?.id);
+            dispatch(setSelectedModelId(modelsData[0]?.id || null));
         }
     }, [hasModels]);
 

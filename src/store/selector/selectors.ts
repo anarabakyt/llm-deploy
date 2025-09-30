@@ -37,10 +37,13 @@ export const selectMessagesByChat = createSelector(
     [selectMessages, selectSelectedChatId, selectSelectedChatLocalId],
     (messages, selectedChatId, selectedChatLocalId) => {
         if (selectedChatId) {
+            console.log('selector-selectMessagesByChat by chatId');
             return messages.filter(message => message.chatId === selectedChatId);
         } else if (selectedChatLocalId) {
+            console.log('selector-selectMessagesByChat by chatLocalId');
             return messages.filter(message => message.chatLocalId === selectedChatLocalId);
         }
+        console.log('selector-selectMessagesByChat empty');
         return [];
     }
 );

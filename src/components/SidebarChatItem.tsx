@@ -24,7 +24,7 @@ export const SidebarChatItem: React.FC<SidebarChatItemProps> = ({
         >
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                    {chat.localId}
+                    {chat.name}
                 </p>
                 <p className="text-xs text-gray-500">
                     {new Date(chat.createdAt).toLocaleDateString()}

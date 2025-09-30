@@ -60,6 +60,7 @@ export const ChatArea: React.FC = () => {
             })
         );
 
+        console.log('==> ChatArea-handleSendMessage: setNewChat');
         setNewChat(null);
     };
 
@@ -93,7 +94,7 @@ export const ChatArea: React.FC = () => {
                     </div>
                 ) : (
                     messages.map((message) => (
-                        <div key={message.id} className="space-y-4">
+                        <div key={(message.id ? message.id : 'tmp') + (message?.chatLocalId ? message.chatLocalId : '')} className="space-y-4">
                             {/* Сообщение пользователя */}
                             <MessageBubble
                                 message={message}

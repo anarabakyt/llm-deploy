@@ -18,7 +18,13 @@ export const sendMessageThunk = createAsyncThunk<
     const selectedModelId = state.models.selectedModelId;
     const selectedModelUrl = state.models.selectedModelUrl;
 
+    console.log('==> messageThunk-handleSendMessage: selectedChatId: ', selectedChatId);
+    console.log('==> messageThunk-handleSendMessage: selectedLocalChatId: ', selectedChatLocalId);
+    console.log('==> messageThunk-handleSendMessage: selectedModelId: ', selectedModelId);
+    console.log('==> messageThunk-handleSendMessage: selectedModelUrl: ', selectedModelUrl);
+
     if (!messageText.trim() || !selectedModelId || !selectedModelUrl) {
+        console.log('==> messageThunk-handleSendMessage: return');
         return;
     }
 
@@ -40,6 +46,7 @@ export const sendMessageThunk = createAsyncThunk<
         try {
             dispatch(addChat(newChat));
             const createdChat = await ChatService.createChat(newChat.modelId, newChat.name);
+            console.log('==> messageThunk-handleSendMessage: createdChat: ', createdChat);
             dispatch(updateChatFromLocalId({
                 localId: finalLocalId,
                 chat: createdChat
@@ -49,6 +56,7 @@ export const sendMessageThunk = createAsyncThunk<
                 newChatId: createdChat.id!
             }));
 
+            console.log('==> messageThunk-handleSendMessage: createdChat.id', createdChat.id);
             finalChatId = createdChat.id;
         } catch (err) {
             console.error("Ошибка при создании чата:", err);
@@ -63,7 +71,12 @@ export const sendMessageThunk = createAsyncThunk<
             content: messageText,
         });
 
-        dispatch(addMessage(response));
+        console.log('==> messageThunk-handleSendMessage: response: ', response);
+
+        dispatch(addMessage({...response, chatLocalId: finalLocalId}));
+
+        console.log('==> messageThunk-handleSendMessage: end of function');
+        console.log('==> messageThunk-handleSendMessage: state.chats.selectedChatId: ', state.chats.selectedChatId);
     } catch (err) {
         console.error("Ошибка при отправке сообщения моделям:", err);
     }
