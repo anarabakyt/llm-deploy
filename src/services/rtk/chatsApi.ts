@@ -24,6 +24,7 @@ export const chatsApi = createApi({
                         id: chat.id,
                         modelId: chat.model_id,
                         localId: null,
+                        name: chat.name,
                         createdAt: chat.created_at, // Оставляем как строку для сериализации
                     }));
                 }

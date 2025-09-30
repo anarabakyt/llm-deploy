@@ -15,34 +15,36 @@ export const Renderer: React.FC = () => {
     const user = useAppSelector((state) => state.user.currentUser);
     const selectedChatId = useAppSelector((state) => state.chats.selectedChatId);
 
-    // Если пользователь не авторизован, показываем экран входа
-    if (!user) {
-        return <LoginScreen onGoogleLogin={authService.signInWithGoogle}/>;
-    }
-
     const {data: modelsData = [], isLoading: modelsLoading, error: modelsError} = useGetModelsQuery(user?.id || '', {
         skip: !user?.id
     });
     const models: Model[] = modelsData ?? [];
-
-    useEffect(() => {
-        if (modelsData) {
-            dispatch(setModels(modelsData));
-        }
-    }, [modelsData, dispatch]);
+    const hasModels = models.length > 0;
 
     const {data: chatsData = [], isLoading: chatsLoading, error: chatsError} = useGetChatsQuery(user?.id || '', {
         skip: !user?.id
     });
     const chats: Chat[] = chatsData ?? [];
+    const hasChats = chats.length > 0;
+
+    useEffect(() => {
+        if (modelsData) {
+            dispatch(setModels(modelsData));
+        }
+    }, [hasModels]);
 
     useEffect(() => {
         if (chatsData) {
             dispatch(setChats(chatsData));
         }
-    }, [chatsData, dispatch]);
+    }, [hasChats]);
 
-    // Получаем текущий чат и модель
+    // Если пользователь не авторизован, показываем экран входа
+    if (!user) {
+        return <LoginScreen onGoogleLogin={authService.signInWithGoogle}/>;
+    }
+
+    // todo установить в dispatch
     const currentChat = chats.find(chat => chat.id === selectedChatId) || null;
     const currentModel = currentChat
         ? models.find(model => model.id === currentChat.modelId) || null
@@ -55,7 +57,7 @@ export const Renderer: React.FC = () => {
             <div className="flex h-screen bg-gray-100 items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Загрузка данных...</p>
+                    <p className="text-gray-600">Loading data...</p>
                 </div>
             </div>
         );
@@ -68,8 +70,8 @@ export const Renderer: React.FC = () => {
             <div className="flex h-screen bg-gray-100 items-center justify-center">
                 <div className="text-center">
                     <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Ошибка загрузки</h2>
-                    <p className="text-gray-600">Не удалось загрузить данные с сервера</p>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Error</h2>
+                    <p className="text-gray-600">Failed to load data from server</p>
                 </div>
             </div>
         );

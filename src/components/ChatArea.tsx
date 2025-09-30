@@ -5,18 +5,16 @@ import {
     selectMessagesLoading,
     selectSelectedChatId,
     selectSelectedChatLocalId,
-    selectSelectedModelIdBySelectedChat,
-    selectSelectedModelUrlBySelectedChat
+    selectSelectedChatName,
+    selectSelectedModelId
 } from '../store/selector/selectors.ts';
-import {setChatMessages} from '../store/slice/messageSlice.ts';
-import {useGetChatMessagesQuery} from '../services/rtk';
 import {LocalIdGenerator} from '../utils';
 import {MessageBubble} from './MessageBubble';
 import {ChatInput} from './ChatInput';
 import {ResponseCard} from './ResponseCard';
 import {Loader} from './Loader';
 import type {Chat} from '../entities';
-import {setSelectedChatId, setSelectedChatLocalId} from "../store/slice/chatSlice.ts";
+import {setSelectedChatLocalId} from "../store/slice/chatSlice.ts";
 import {sendMessageThunk} from "../store/thunk/messageThunks.ts";
 
 export const ChatArea: React.FC = () => {
@@ -24,70 +22,58 @@ export const ChatArea: React.FC = () => {
     const messages = useAppSelector(selectMessagesByChat);
     const selectedChatId = useAppSelector(selectSelectedChatId);
     const selectedChatLocalId = useAppSelector(selectSelectedChatLocalId);
-    const selectedModelId = useAppSelector(selectSelectedModelIdBySelectedChat);
-    const selectedModelUrl = useAppSelector(selectSelectedModelUrlBySelectedChat);
+    const selectedChatName = useAppSelector(selectSelectedChatName);
+    const selectedModelId = useAppSelector(selectSelectedModelId);
     const isLoading = useAppSelector(selectMessagesLoading);
 
     const [newChat, setNewChat] = useState<Chat | null>(null);
-    const [isNewChat, setIsNewChat] = useState(!selectedChatId);
-
-    const {data: reloadedMessages = []} = useGetChatMessagesQuery(
-        {chatId: selectedChatId!},
-        {skip: !selectedChatId || messages.length > 0}
-    );
 
     useEffect(() => {
-        if (reloadedMessages.length > 0 && selectedChatId) {
-            dispatch(setChatMessages({chatId: selectedChatId, messages: reloadedMessages}));
-        } else {
-            dispatch(setSelectedChatId(null));
-        }
-    }, [reloadedMessages, selectedChatId, dispatch]);
-
-    useEffect(() => {
-        if (isNewChat && selectedModelId) {
+        console.log('==> ChatArea: selectedChatId: ', selectedChatId);
+        console.log('==> ChatArea: selectedModelId: ', selectedModelId);
+        if (!selectedChatId && selectedModelId) {
             const newChatData: Chat = {
                 id: null,
                 modelId: selectedModelId,
                 localId: LocalIdGenerator.generateLocalId(),
+                name: 'Ask AI ' + (new Date()).toLocaleTimeString(),
                 createdAt: new Date().toISOString(),
             };
             setNewChat(newChatData);
             dispatch(setSelectedChatLocalId(newChatData.localId));
+        } else {
+            setNewChat(null);
         }
-    }, [isNewChat, selectedModelId]);
+    }, [selectedChatId, selectedModelId]);
 
     const handleSendMessage = async (messageText: string) => {
         const newChatCopy = newChat ? {...newChat} : null;
 
+        console.log('==> ChatArea-handleSendMessage: newChat: ', newChat);
+        console.log('==> ChatArea-handleSendMessage: selectedChatId: ', selectedChatId);
+        console.log('==> ChatArea-handleSendMessage: selectedLocalChatId: ', selectedChatLocalId);
         dispatch(
             sendMessageThunk({
                 messageText,
-                isNewChat: isNewChat,
+                isNewChat: !selectedChatId,
                 newChat: newChatCopy,
             })
         );
 
-        if (isNewChat) {
-            setIsNewChat(false);
-            setNewChat(null);
-        }
+        setNewChat(null);
     };
 
     return (
-        <div className="flex-1 flex flex-col bg-white">
+        <div className="flex-1 flex flex-col bg-white h-screen">
             {/* Заголовок */}
-            <div className="border-b border-gray-200 p-4">
+            <div className="border-b border-gray-200 p-4 flex-shrink-0">
                 <h2 className="text-lg font-semibold text-gray-800">
-                    Спросить ИИ
+                    {selectedChatName}
                 </h2>
-                <p className="text-sm text-gray-500">
-                    Отправьте сообщение, чтобы получить ответы от всех доступных моделей
-                </p>
             </div>
 
             {/* Область сообщений */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
@@ -97,11 +83,11 @@ export const ChatArea: React.FC = () => {
                                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                             </svg>
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                Сравните ответы AI-моделей
+                                Compare AI Model Responses
                             </h3>
                             <p className="text-gray-500 max-w-md">
-                                Задайте вопрос и получите ответы от всех доступных моделей для сравнения их качества и
-                                скорости
+                                Ask a question and get responses from all available models to compare their quality and
+                                speed
                             </p>
                         </div>
                     </div>
@@ -118,7 +104,7 @@ export const ChatArea: React.FC = () => {
                             {message.modelResponses && message.modelResponses.length > 0 && (
                                 <div className="space-y-3">
                                     <h4 className="text-sm font-medium text-gray-600">
-                                        Ответы моделей:
+                                        Model responses:
                                     </h4>
                                     <div className="space-y-3">
                                         {message.modelResponses.map((response) => (
@@ -145,11 +131,13 @@ export const ChatArea: React.FC = () => {
             </div>
 
             {/* Поле ввода */}
-            <ChatInput
-                onSendMessage={handleSendMessage}
-                disabled={isLoading}
-                placeholder="Задайте вопрос для сравнения ответов всех моделей..."
-            />
+            <div className="flex-shrink-0">
+                <ChatInput
+                    onSendMessage={handleSendMessage}
+                    disabled={isLoading}
+                    placeholder="Ask a question to compare responses from all models..."
+                />
+            </div>
         </div>
     );
 };

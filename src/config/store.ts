@@ -3,7 +3,6 @@ import userReducer from '../store/slice/userSlice.ts';
 import modelReducer from '../store/slice/modelSlice.ts';
 import chatReducer from '../store/slice/chatSlice.ts';
 import messageReducer from '../store/slice/messageSlice.ts';
-import feedbackReducer from '../store/slice/feedbackSlice.ts';
 import {chatsApi, messagesApi, modelsApi} from '../services/rtk';
 
 export const store = configureStore({
@@ -12,7 +11,6 @@ export const store = configureStore({
         models: modelReducer,
         chats: chatReducer,
         messages: messageReducer,
-        feedback: feedbackReducer,
         [modelsApi.reducerPath]: modelsApi.reducer,
         [chatsApi.reducerPath]: chatsApi.reducer,
         [messagesApi.reducerPath]: messagesApi.reducer,

@@ -1,6 +1,7 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import type {Message} from '../../entities';
 
+// todo deprecated
 export const messagesApi = createApi({
     reducerPath: 'messagesApi',
     baseQuery: fetchBaseQuery({
@@ -21,33 +22,30 @@ export const messagesApi = createApi({
                 url: `/${chatId}`,
                 method: 'GET',
             }),
-            transformResponse: (response: any) => {
-                if (response && response.messages && Array.isArray(response.messages)) {
-                    return response.messages.map((message: any) => {
-                        const messageData: Message = {
-                            id: message.id,
-                            chatId: message.chat_id,
-                            chatLocalId: null,
-                            author: message.author,
-                            content: message.content,
-                            createdAt: message.created_at,
-                        };
-
-                        if (message.model_responses && Array.isArray(message.model_responses)) {
-                            messageData.modelResponses = message.model_responses.map((modelResp: any) => ({
-                                id: modelResp.id,
-                                messageId: modelResp.message_id,
-                                modelName: modelResp.model_name,
-                                content: modelResp.content,
-                                responseTime: modelResp.response_time,
-                                createdAt: modelResp.created_at,
-                            }));
-                        }
-
-                        return messageData;
-                    });
-                }
-                return [];
+            transformResponse: (response: any): Message[] => {
+                return response?.messages?.map(({message_with_responses: base}: any) => ({
+                    id: base.id,
+                    chatId: base.chat_id,
+                    chatLocalId: null,
+                    author: base.author,
+                    content: base.content,
+                    createdAt: base.created_at,
+                    modelResponses: base.model_responses?.map(({
+                                                                   id,
+                                                                   message_id,
+                                                                   model_name,
+                                                                   content,
+                                                                   response_time,
+                                                                   created_at
+                                                               }: any) => ({
+                        id,
+                        messageId: message_id,
+                        modelName: model_name,
+                        content,
+                        responseTime: response_time,
+                        createdAt: created_at,
+                    })) ?? []
+                })) ?? [];
             },
             providesTags: (result, error, {chatId}) => [
                 {type: 'Message', id: chatId},

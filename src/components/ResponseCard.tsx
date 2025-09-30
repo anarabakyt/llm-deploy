@@ -35,6 +35,7 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
         try {
             // todo реализация лайка
             setIsLiked(!isLiked);
+            setIsDisliked(false);
         } catch (error) {
             console.error('Error toggling like:', error);
         }
@@ -45,6 +46,7 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
         try {
             // todo реализация дизлайка
             setIsDisliked(!isDisliked);
+            setIsLiked(false);
         } catch (error) {
             console.error('Error toggling dislike:', error);
         }
@@ -68,14 +70,14 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
                 {!isExpanded && response.content.split('\n').length > 5 && (
                     <div className="mt-2">
             <span className="text-blue-500 text-sm font-medium">
-              Нажмите, чтобы развернуть...
+              Click to expand...
             </span>
                     </div>
                 )}
                 {isExpanded && response.content.split('\n').length > 5 && (
                     <div className="mt-2">
             <span className="text-blue-500 text-sm font-medium">
-              Нажмите, чтобы свернуть...
+              Click to collapse...
             </span>
                     </div>
                 )}
@@ -97,7 +99,7 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
                                 ? 'text-green-500 bg-green-50 hover:bg-green-100'
                                 : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
                         }`}
-                        title={isLiked ? 'Убрать лайк' : 'Поставить лайк'}
+                        title={isLiked ? 'Remove like' : 'Like'}
                     >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path
@@ -111,7 +113,7 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
                                 ? 'text-red-500 bg-red-50 hover:bg-red-100'
                                 : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
                         }`}
-                        title={isDisliked ? 'Убрать дизлайк' : 'Поставить дизлайк'}
+                        title={isDisliked ? 'Remove dislike' : 'Dislike'}
                     >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path

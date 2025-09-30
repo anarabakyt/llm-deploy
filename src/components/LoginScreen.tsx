@@ -13,7 +13,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({onGoogleLogin}) => {
                         LLMGator
                     </h1>
                     <p className="text-gray-600 mb-8">
-                        Агрегатор AI-агентов для сравнения ответов различных LLM-моделей
+                        AI Agent Aggregator for comparing responses from various LLM models
                     </p>
                     <button
                         onClick={onGoogleLogin}
@@ -37,7 +37,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({onGoogleLogin}) => {
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                             />
                         </svg>
-                        Войти
+                        Sign In
                     </button>
                 </div>
             </div>

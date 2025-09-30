@@ -4,7 +4,7 @@ import {addMessage, updateMessagesChatIdFromLocalId,} from "../slice/messageSlic
 import type {Chat, Message} from "../../entities";
 import type {RootState} from "../../config/store.ts";
 import {ChatService} from "../../services/createChatService.ts";
-import {MessageService} from "../../services/sendMessageService.ts";
+import {MessageService} from "../../services/messageService.ts";
 
 export const sendMessageThunk = createAsyncThunk<
     void,
@@ -39,7 +39,7 @@ export const sendMessageThunk = createAsyncThunk<
     if (isNewChat && newChat) {
         try {
             dispatch(addChat(newChat));
-            const createdChat = await ChatService.createChat(newChat.modelId);
+            const createdChat = await ChatService.createChat(newChat.modelId, newChat.name);
             dispatch(updateChatFromLocalId({
                 localId: finalLocalId,
                 chat: createdChat

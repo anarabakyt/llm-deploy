@@ -1,15 +1,32 @@
 import React, {useState} from 'react';
 import {useAppDispatch, useAppSelector} from '../config/hooks.ts';
-import {selectChats, selectModels, selectSelectedChatId} from '../store/selector/selectors.ts';
+import {selectChats, selectMessagesByChat, selectModels, selectSelectedChatId} from '../store/selector/selectors.ts';
 import {setSelectedChatId, setSelectedChatLocalId} from '../store/slice/chatSlice.ts';
 import {SidebarModelItem} from './SidebarModelItem';
 import {setSelectedModelId} from "../store/slice/modelSlice.ts";
+import {MessageService} from "../services/messageService.ts";
+import {setChatMessages} from "../store/slice/messageSlice.ts";
+import type {Message} from "../entities";
 
 export const Sidebar: React.FC = () => {
     const dispatch = useAppDispatch();
     const models = useAppSelector(selectModels);
     const chats = useAppSelector(selectChats);
     const activeChatId = useAppSelector(selectSelectedChatId);
+    const messages = useAppSelector(selectMessagesByChat);
+
+    const fetchMessages = (oldMessages: Message[]) => {
+        if (activeChatId && oldMessages.length === 0) {
+            console.log('==> Sidebar-fetchMessages: activeChatId: ', activeChatId);
+            console.log('==> Sidebar-fetchMessages: messages.length: ', oldMessages.length);
+            MessageService.getChatMessages(activeChatId)
+                .then((fetchedMessages) => {
+                    dispatch(setChatMessages({chatId: activeChatId, messages: fetchedMessages}));
+                });
+        }
+    }
+
+    fetchMessages(messages);
 
     // Группируем чаты по моделям
     const chatsByModel = chats.reduce((acc, chat) => {
@@ -37,14 +54,18 @@ export const Sidebar: React.FC = () => {
     };
 
     const handleChatSelect = (modelId: string, chatId: string | null, localId: string | null) => {
+        console.log('==> Sidebar-handleChatSelect: modelId, chatId, localId: ', modelId, chatId, localId);
         dispatch(setSelectedChatId(chatId));
         dispatch(setSelectedChatLocalId(localId));
         dispatch(setSelectedModelId(modelId));
+        console.log('==> messages length: ', messages.length);
     };
 
     const handleNewChat = (modelId: string) => {
+        console.log('==> Sidebar-handleNewChat: modelId: ', modelId);
         dispatch(setSelectedModelId(modelId));
         dispatch(setSelectedChatId(null));
+        dispatch(setSelectedChatLocalId(null));
     };
 
     return (
@@ -72,7 +93,7 @@ export const Sidebar: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                   d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
-                        <p className="text-sm">Нет доступных моделей</p>
+                        <p className="text-sm">No available models</p>
                     </div>
                 )}
             </div>
