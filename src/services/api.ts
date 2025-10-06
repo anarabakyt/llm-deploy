@@ -199,9 +199,9 @@ class ApiService {
         return response.data;
     }
 
-    // Метод для авторизации через Google
-    async authenticateWithGoogle(token: string): Promise<User> {
-        const response = await this.post<User>('/auth/google', {token});
+    // Метод для авторизации через Firebase
+    async authenticateWithFirebase(token: string): Promise<User> {
+        const response = await this.post<User>('/auth/firebase', {token});
         return response.data;
     }
 

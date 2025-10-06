@@ -3,7 +3,7 @@ import {Provider} from 'react-redux';
 import {store} from './config/store.ts';
 import {Renderer} from './components';
 import {useAppDispatch, useAppSelector} from './config/hooks.ts';
-import {loginFailure, loginSuccess, logout} from './store/slice/userSlice.ts';
+import {loginFailure, logout, setUser} from './store/slice/userSlice.ts';
 import {authService} from "./services/authService.ts";
 
 // Компонент приложения с логикой авторизации
@@ -15,16 +15,13 @@ const AppContent: React.FC = () => {
     // Инициализация приложения
     useEffect(() => {
         const initializeApp = async () => {
-            // todo это можем оставить и доработать авторизацию тут
             try {
-                // Инициализируем Google Auth
-                await authService.initializeGoogleAuth();
+                await authService.initialize();
 
-                // Проверяем, есть ли сохраненная авторизация
-                if (authService.isAuthenticated()) {
+                if (authService.hasStoredUser()) {
                     const savedUser = authService.getCurrentUser();
                     if (savedUser) {
-                        dispatch(loginSuccess(savedUser));
+                        dispatch(setUser(savedUser));
                     }
                 }
             } catch (error) {
@@ -36,7 +33,7 @@ const AppContent: React.FC = () => {
 
         // Слушаем события авторизации
         const handleAuthSuccess = (event: CustomEvent) => {
-            dispatch(loginSuccess(event.detail));
+            dispatch(setUser(event.detail));
         };
 
         const handleAuthError = (event: CustomEvent) => {

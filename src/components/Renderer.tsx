@@ -43,7 +43,7 @@ export const Renderer: React.FC = () => {
 
     // Если пользователь не авторизован, показываем экран входа
     if (!user) {
-        return <LoginScreen onGoogleLogin={authService.signInWithGoogle}/>;
+        return <LoginScreen onLogin={authService.signIn}/>;
     }
 
     // todo установить в dispatch
