@@ -4,7 +4,7 @@ import type {Model} from '../../entities';
 export const modelsApi = createApi({
     reducerPath: 'modelsApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479',
+        baseUrl: 'https://plus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479',
         prepareHeaders: (headers, {getState}) => {
             const token = localStorage.getItem('authToken');
             if (token) {

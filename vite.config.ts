@@ -4,7 +4,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://denisplus8soft.app.n8n.cloud', // todo заменить на продовский
+        target: 'https://plus8soft.app.n8n.cloud', // todo заменить на продовский
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

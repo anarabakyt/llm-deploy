@@ -5,7 +5,7 @@ import type {Message} from '../../entities';
 export const messagesApi = createApi({
     reducerPath: 'messagesApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/messages',
+        baseUrl: 'https://plus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/messages',
         prepareHeaders: (headers) => {
             const token = localStorage.getItem('authToken');
             if (token) {

@@ -1,7 +1,7 @@
 import type {Chat, Message, Model, ModelResponse, User} from '../entities';
 
 // Базовый URL для API (будет настраиваться через переменные окружения)
-const API_BASE_URL = 'https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479';
+const API_BASE_URL = 'https://plus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479';
 
 // Интерфейс для ответа API
 interface ApiResponse<T> {

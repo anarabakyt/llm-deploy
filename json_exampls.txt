@@ -1,5 +1,5 @@
 Пример json для моделей который приходит с бэкенда
-url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/models/:userId
+url: https://plus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/models/:userId
 {
     "models": [
       {
@@ -34,7 +34,7 @@ url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fa
   }
 
 Пример json для чатов который приходит с бэкенда
-url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/chats/:userId
+url: https://plus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/chats/:userId
 {
     "chats": [
       {
@@ -51,7 +51,7 @@ url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fa
   }
 
 Пример json для сообщений который приходят с бэкенда
-url: https://denisplus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/messages/:chatId
+url: https://plus8soft.app.n8n.cloud/webhook/86dbcf57-9d9a-4b5a-98c9-bf37fad2e479/messages/:chatId
 {
     "messages": [
       {
