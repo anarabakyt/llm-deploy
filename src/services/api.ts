@@ -217,6 +217,58 @@ class ApiService {
     async removeModelResponseFeedback(messageId: string, modelName: string): Promise<void> {
         await this.delete(`/messages/${messageId}/responses/${modelName}/feedback`);
     }
+        // Методы для работы с логами LLM запросов
+        async createLog(log: any): Promise<any> {
+            const response = await this.post<any>('/logs', log);
+            return response.data;
+        }
+    
+        async updateLog(logId: string, updates: any): Promise<any> {
+            const response = await this.put<any>(`/logs/${logId}`, updates);
+            return response.data;
+        }
+    
+        async getLogs(userId: string, filters?: {
+            modelName?: string;
+            startDate?: string;
+            endDate?: string;
+            limit?: number;
+        }): Promise<any[]> {
+            const queryParams = new URLSearchParams();
+            queryParams.append('userId', userId);
+            
+            if (filters?.modelName) queryParams.append('modelName', filters.modelName);
+            if (filters?.startDate) queryParams.append('startDate', filters.startDate);
+            if (filters?.endDate) queryParams.append('endDate', filters.endDate);
+            if (filters?.limit) queryParams.append('limit', filters.limit.toString());
+    
+            const response = await this.get<any[]>(`/logs?${queryParams.toString()}`);
+            return response.data;
+        }
+    
+        async getLogMetrics(userId: string): Promise<any> {
+            const response = await this.get<any>(`/logs/metrics/${userId}`);
+            return response.data;
+        }
+    
+        async deleteLog(logId: string): Promise<void> {
+            await this.delete(`/logs/${logId}`);
+        }
+    
+        async exportLogs(userId: string, format: 'json' | 'csv' = 'json'): Promise<Blob> {
+            const response = await fetch(`${this.baseURL}/logs/export/${userId}?format=${format}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': this.token ? `Bearer ${this.token}` : '',
+                },
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+    
+            return response.blob();
+        }
 }
 
 // Класс для ошибок API

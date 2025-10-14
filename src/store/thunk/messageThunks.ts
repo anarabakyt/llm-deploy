@@ -1,10 +1,12 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import {addChat, updateChatFromLocalId} from "../slice/chatSlice";
 import {addMessage, updateMessagesChatIdFromLocalId,} from "../slice/messageSlice";
+import {addLog, updateUserRating} from "../slice/loggingSlice";
 import type {Chat, Message} from "../../entities";
 import type {RootState} from "../../config/store.ts";
 import {ChatService} from "../../services/createChatService.ts";
 import {MessageService} from "../../services/messageService.ts";
+import {LLMLoggingService} from "../../services/llmLoggingService.ts";
 
 export const sendMessageThunk = createAsyncThunk<
     void,
@@ -79,5 +81,25 @@ export const sendMessageThunk = createAsyncThunk<
         console.log('==> messageThunk-handleSendMessage: state.chats.selectedChatId: ', state.chats.selectedChatId);
     } catch (err) {
         console.error("Ошибка при отправке сообщения моделям:", err);
+    }
+});
+
+// Thunk для обновления пользовательской оценки ответа LLM
+export const updateLLMResponseRatingThunk = createAsyncThunk<
+    void,
+    { logId: string; rating: 'like' | 'dislike' | null },
+    { state: RootState }
+>("messages/updateLLMResponseRatingThunk", async ({ logId, rating }, { dispatch }) => {
+    try {
+        // Обновляем оценку в сервисе логирования
+        LLMLoggingService.updateUserRating(logId, rating);
+        
+        // Обновляем Redux store
+        dispatch(updateUserRating({ logId, rating }));
+        
+        console.log(`==> updateLLMResponseRatingThunk: Updated rating for log ${logId} to ${rating}`);
+    } catch (err) {
+        console.error("Ошибка при обновлении оценки ответа LLM:", err);
+        throw err;
     }
 });
