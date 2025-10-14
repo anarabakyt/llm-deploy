@@ -1,4 +1,6 @@
 import React from 'react';
+import {useAppSelector} from '../config/hooks.ts';
+import {selectAutoSelectionMode, selectSelectedModelId} from '../store/selector/selectors.ts';
 import type {Chat, Model} from '../entities';
 import {SidebarChatItem} from './SidebarChatItem';
 
@@ -21,6 +23,9 @@ export const SidebarModelItem: React.FC<SidebarModelItemProps> = ({
                                                                       onNewChat,
                                                                       activeChatId,
                                                                   }) => {
+    const autoSelectionMode = useAppSelector(selectAutoSelectionMode);
+    const selectedModelId = useAppSelector(selectSelectedModelId);
+    const isAutoSelected = autoSelectionMode !== 'manual' && selectedModelId === model.id;
     return (
         <div className="mb-2">
             <div
@@ -28,9 +33,14 @@ export const SidebarModelItem: React.FC<SidebarModelItemProps> = ({
                 onClick={() => onToggle(model.id)}
             >
                 <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-gray-700">
-            {model.name}
-          </span>
+                    <span className="text-sm font-medium text-gray-700">
+                        {model.name}
+                    </span>
+                    {isAutoSelected && (
+                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            Auto
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex items-center space-x-1">
