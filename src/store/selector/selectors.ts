@@ -10,6 +10,9 @@ export const selectSelectedModelId = (state: RootState) => state.models.selected
 export const selectSelectedModelUrl = (state: RootState) => state.models.selectedModelUrl;
 export const selectModelsLoading = (state: RootState) => state.models.isLoading;
 export const selectModelsError = (state: RootState) => state.models.error;
+export const selectAutoSelectionMode = (state: RootState) => state.models.autoSelectionMode;
+export const selectModelScores = (state: RootState) => state.models.modelScores;
+
 
 export const selectChats = (state: RootState) => state.chats.chats;
 export const selectSelectedChatId = (state: RootState) => state.chats.selectedChatId;

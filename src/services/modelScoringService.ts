@@ -1,4 +1,5 @@
-import type {ModelResponse} from '../entities';
+ import type {ModelResponse} from '../entities';
+
 
 export interface ModelScore {
     quality: number;
@@ -122,4 +123,9 @@ export class ModelScoringService {
         
         return bestModelId;
     }
+
 }
+
+
+
+

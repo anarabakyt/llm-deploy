@@ -28,18 +28,18 @@ export const Renderer: React.FC = () => {
     const hasChats = chats.length > 0;
 
     useEffect(() => {
-        if (modelsData) {
+        if (modelsData && modelsData.length > 0) {
             dispatch(setModels(modelsData));
             console.log('==> Renderer-useEffect: setSelectedModelId: ', modelsData[0]?.id);
             dispatch(setSelectedModelId(modelsData[0]?.id || null));
         }
-    }, [hasModels]);
+    }, [modelsData, dispatch]);
 
     useEffect(() => {
         if (chatsData) {
             dispatch(setChats(chatsData));
         }
-    }, [hasChats]);
+    }, [chatsData, dispatch]);
 
     // Если пользователь не авторизован, показываем экран входа
     if (!user) {
