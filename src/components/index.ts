@@ -11,3 +11,8 @@ export {Loader} from './Loader';
 export {AutoSelectionModeSelector} from './AutoSelectionModeSelector';
 export {MidConversationLLMSelector} from './MidConversationLLMSelector';
 export {InviteUsersModal} from './InviteUsersModal';
+export {LoggingDashboard} from './LoggingDashboard';
+export {ContextAwareLLMSelector} from './ContextAwareLLMSelector';
+export {ContextConfirmationModal} from './ContextConfirmationModal';
+export {TokenUsageIndicator} from './TokenUsageIndicator';
+export {ContextModeToggle} from './ContextModeToggle';
