@@ -16,3 +16,7 @@ export {ContextAwareLLMSelector} from './ContextAwareLLMSelector';
 export {ContextConfirmationModal} from './ContextConfirmationModal';
 export {TokenUsageIndicator} from './TokenUsageIndicator';
 export {ContextModeToggle} from './ContextModeToggle';
+export {UserStats} from './UserStats';
+export {UserFilter} from './UserFilter';
+export {UserComparison} from './UserComparison';
+export {UserActivityChart} from './UserActivityChart';
