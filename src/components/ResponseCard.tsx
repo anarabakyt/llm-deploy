@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
-import {useAppDispatch} from '../config/hooks.ts';
+import {useAppDispatch, useAppSelector} from '../config/hooks.ts';
+import {selectModelScores} from '../store/selector/selectors.ts';
 import type {ModelResponse} from '../entities';
 
 interface ResponseCardProps {
@@ -16,9 +17,12 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
                                                               onDislike,
                                                           }) => {
     const dispatch = useAppDispatch();
+    const modelScores = useAppSelector(selectModelScores);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [isDisliked, setIsDisliked] = useState(false);
+    
+    const modelScore = modelScores[response.modelName];
 
     // Функция для получения превью (первые 5 строк)
     const getPreview = (content: string): string => {
@@ -59,7 +63,19 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({
         >
             {/* Заголовок с именем модели */}
             <div className="mb-3">
-                <h3 className="font-semibold text-gray-800 text-lg">{response.modelName}</h3>
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-800 text-lg">{response.modelName}</h3>
+                    {modelScore && (
+                        <div className="flex space-x-2 text-xs">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                Quality: {Math.round(modelScore.quality * 100)}%
+                            </span>
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded">
+                                Efficiency: {Math.round(modelScore.tokenEfficiency * 100)}%
+                            </span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Контент ответа */}

@@ -8,3 +8,6 @@ export {MessageBubble} from './MessageBubble';
 export {SidebarChatItem} from './SidebarChatItem';
 export {SidebarModelItem} from './SidebarModelItem';
 export {Loader} from './Loader';
+export {AutoSelectionModeSelector} from './AutoSelectionModeSelector';
+export {MidConversationLLMSelector} from './MidConversationLLMSelector';
+export {InviteUsersModal} from './InviteUsersModal';
