@@ -21,6 +21,7 @@ import {
 } from '../store/slice/loggingSlice.ts';
 import { LLMLoggingService } from '../services/llmLoggingService.ts';
 import { updateLLMResponseRatingThunk } from '../store/thunk/messageThunks';
+import { addLog } from '../store/slice/loggingSlice';
 import { UserStats, UserFilter, UserComparison, UserActivityChart } from './index';
 
 export const LoggingDashboard: React.FC = () => {
@@ -42,7 +43,125 @@ export const LoggingDashboard: React.FC = () => {
     useEffect(() => {
         // Load logs from localStorage on mount
         LLMLoggingService.loadLogsFromStorage();
-    }, []);
+        
+        // Add mock data for demonstration if no logs exist
+        if (logs.length === 0) {
+            loadMockData();
+        }
+    }, [logs.length]);
+
+    const loadMockData = () => {
+        // Mock users data
+        const mockLogs = [
+            {
+                id: 'mock_log_1',
+                userId: 'user_1',
+                userName: 'John Doe',
+                userEmail: 'john@example.com',
+                userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
+                prompt: 'Explain quantum computing in simple terms',
+                promptTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                responseTime: 1200,
+                llmResponse: 'Quantum computing is a revolutionary approach to computation that uses quantum mechanical phenomena...',
+                modelName: 'GPT-4',
+                tokenCount: 156,
+                qualityScore: 0.87,
+                userRating: 'like' as const,
+                chatId: 'chat_1',
+                createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+            },
+            {
+                id: 'mock_log_2',
+                userId: 'user_1',
+                userName: 'John Doe',
+                userEmail: 'john@example.com',
+                userAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
+                prompt: 'Write a Python function to sort a list',
+                promptTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+                responseTime: 800,
+                llmResponse: 'Here\'s a Python function to sort a list using the built-in sort method...',
+                modelName: 'Claude-3',
+                tokenCount: 142,
+                qualityScore: 0.91,
+                userRating: 'like' as const,
+                chatId: 'chat_2',
+                createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+            },
+            {
+                id: 'mock_log_3',
+                userId: 'user_2',
+                userName: 'Jane Smith',
+                userEmail: 'jane@example.com',
+                userAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
+                prompt: 'What are the benefits of TypeScript?',
+                promptTime: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+                responseTime: 950,
+                llmResponse: 'TypeScript offers several key benefits including static typing, better IDE support...',
+                modelName: 'GPT-4',
+                tokenCount: 128,
+                qualityScore: 0.82,
+                userRating: null,
+                chatId: 'chat_3',
+                createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+            },
+            {
+                id: 'mock_log_4',
+                userId: 'user_2',
+                userName: 'Jane Smith',
+                userEmail: 'jane@example.com',
+                userAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
+                prompt: 'How to optimize React performance?',
+                promptTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+                responseTime: 1100,
+                llmResponse: 'To optimize React performance, you can use techniques like memoization, code splitting...',
+                modelName: 'Gemini',
+                tokenCount: 134,
+                qualityScore: 0.78,
+                userRating: 'dislike' as const,
+                chatId: 'chat_4',
+                createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+            },
+            {
+                id: 'mock_log_5',
+                userId: 'user_3',
+                userName: 'Mike Johnson',
+                userEmail: 'mike@example.com',
+                userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
+                prompt: 'Explain machine learning algorithms',
+                promptTime: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+                responseTime: 1400,
+                llmResponse: 'Machine learning algorithms are mathematical models that learn patterns from data...',
+                modelName: 'GPT-4',
+                tokenCount: 189,
+                qualityScore: 0.89,
+                userRating: 'like' as const,
+                chatId: 'chat_5',
+                createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+            },
+            {
+                id: 'mock_log_6',
+                userId: 'user_3',
+                userName: 'Mike Johnson',
+                userEmail: 'mike@example.com',
+                userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
+                prompt: 'Best practices for database design',
+                promptTime: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+                responseTime: 1000,
+                llmResponse: 'Database design best practices include normalization, proper indexing, and relationship modeling...',
+                modelName: 'Claude-3',
+                tokenCount: 167,
+                qualityScore: 0.85,
+                userRating: 'like' as const,
+                chatId: 'chat_6',
+                createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+            }
+        ];
+
+        // Add mock logs to Redux store
+        mockLogs.forEach(log => {
+            dispatch(addLog(log));
+        });
+    };
 
     const handleModelFilterChange = (modelName: string) => {
         dispatch(setFilterByModel(modelName === 'all' ? null : modelName));
