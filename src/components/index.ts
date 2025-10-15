@@ -20,3 +20,4 @@ export {UserStats} from './UserStats';
 export {UserFilter} from './UserFilter';
 export {UserComparison} from './UserComparison';
 export {UserActivityChart} from './UserActivityChart';
+export * from './admin';
