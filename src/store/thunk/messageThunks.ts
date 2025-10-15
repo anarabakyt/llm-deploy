@@ -99,6 +99,23 @@ export const sendMessageThunk = createAsyncThunk<
             dispatch(selectBestModel());
         }
 
+        // Логирование запроса к LLM
+        if (state.user.currentUser && response.modelResponses && response.modelResponses.length > 0) {
+            const modelResponse = response.modelResponses[0]; // Логируем только первый ответ
+            const log = LLMLoggingService.logRequest({
+                userId: state.user.currentUser.id,
+                userName: state.user.currentUser.name,
+                userEmail: state.user.currentUser.email,
+                userAvatar: state.user.currentUser.avatarUrl,
+                prompt: messageText,
+                response: modelResponse,
+                modelName: modelResponse.modelName,
+                chatId: finalChatId!,
+            });
+            // Добавляем лог в Redux store
+            dispatch(addLog(log));
+        }
+
         console.log('==> messageThunk-handleSendMessage: end of function');
         console.log('==> messageThunk-handleSendMessage: state.chats.selectedChatId: ', state.chats.selectedChatId);
     } catch (err) {

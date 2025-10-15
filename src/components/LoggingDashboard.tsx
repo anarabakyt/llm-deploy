@@ -6,16 +6,22 @@ import {
     selectFilteredLogs, 
     selectModelStatistics,
     selectFilterByModel,
-    selectFilterByDateRange
+    selectFilterByDateRange,
+    selectUniqueUsers,
+    selectUserStatistics,
+    selectFilterByUser,
+    selectFilteredLogsByUser
 } from '../store/selector/selectors';
 import { 
     setFilterByModel, 
     setFilterByDateRange, 
+    setFilterByUser,
     clearFilters,
     setSelectedLogId
 } from '../store/slice/loggingSlice.ts';
 import { LLMLoggingService } from '../services/llmLoggingService.ts';
 import { updateLLMResponseRatingThunk } from '../store/thunk/messageThunks';
+import { UserStats, UserFilter, UserComparison, UserActivityChart } from './index';
 
 export const LoggingDashboard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -25,6 +31,10 @@ export const LoggingDashboard: React.FC = () => {
     const modelStats = useAppSelector(selectModelStatistics);
     const filterByModel = useAppSelector(selectFilterByModel);
     const filterByDateRange = useAppSelector(selectFilterByDateRange);
+    const uniqueUsers = useAppSelector(selectUniqueUsers);
+    const userStats = useAppSelector(selectUserStatistics);
+    const filterByUser = useAppSelector(selectFilterByUser);
+    const filteredLogsByUser = useAppSelector(selectFilteredLogsByUser);
     
     const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
     const [showExportModal, setShowExportModal] = useState(false);
@@ -43,6 +53,10 @@ export const LoggingDashboard: React.FC = () => {
             start: start || null, 
             end: end || null 
         }));
+    };
+
+    const handleUserFilterChange = (userId: string | null) => {
+        dispatch(setFilterByUser(userId));
     };
 
     const handleClearFilters = () => {
@@ -149,10 +163,32 @@ export const LoggingDashboard: React.FC = () => {
                 </div>
             </div>
 
+            {/* User Analytics */}
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">User Analytics</h2>
+                <UserStats
+                    totalUsers={uniqueUsers.length}
+                    activeUsers={userStats.filter(user => {
+                        const lastActivity = new Date(user.lastActivity);
+                        const sevenDaysAgo = new Date();
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                        return lastActivity > sevenDaysAgo;
+                    }).length}
+                    topUser={{
+                        name: userStats[0]?.userName || 'No users',
+                        requests: userStats[0]?.totalRequests || 0
+                    }}
+                    averageSatisfaction={userStats.length > 0 
+                        ? userStats.reduce((sum, user) => sum + user.userSatisfactionRate, 0) / userStats.length 
+                        : 0
+                    }
+                />
+            </div>
+
             {/* Filters */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
                         <select
@@ -165,6 +201,13 @@ export const LoggingDashboard: React.FC = () => {
                                 <option key={modelName} value={modelName}>{modelName}</option>
                             ))}
                         </select>
+                    </div>
+                    <div>
+                        <UserFilter
+                            users={uniqueUsers}
+                            selectedUserId={filterByUser}
+                            onUserChange={handleUserFilterChange}
+                        />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
@@ -232,17 +275,38 @@ export const LoggingDashboard: React.FC = () => {
                 </div>
             </div>
 
+            {/* User Comparison */}
+            <div className="mb-6">
+                <UserComparison userStats={userStats} />
+            </div>
+
             {/* Logs List */}
             <div className="bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-900">Request Logs ({filteredLogs.length})</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Request Logs ({filteredLogsByUser.length})</h2>
                 </div>
                 <div className="divide-y divide-gray-200">
-                    {filteredLogs.map((log) => (
+                    {filteredLogsByUser.map((log) => (
                         <div key={log.id} className="p-6 hover:bg-gray-50">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center space-x-4 mb-2">
+                                        <div className="flex items-center space-x-2">
+                                            {log.userAvatar ? (
+                                                <img
+                                                    className="h-6 w-6 rounded-full"
+                                                    src={log.userAvatar}
+                                                    alt={log.userName}
+                                                />
+                                            ) : (
+                                                <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center">
+                                                    <span className="text-xs font-medium text-gray-700">
+                                                        {log.userName.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <span className="text-sm font-medium text-gray-700">{log.userName}</span>
+                                        </div>
                                         <h3 className="text-sm font-medium text-gray-900">{log.modelName}</h3>
                                         <span className="text-xs text-gray-500">{formatDate(log.createdAt)}</span>
                                         <span className="text-xs text-gray-500">{formatDuration(log.responseTime)}</span>

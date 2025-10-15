@@ -141,3 +141,91 @@ export const selectModelStatistics = createSelector(
         return modelStats;
     }
 );
+
+// Пользовательские аналитики
+export const selectUniqueUsers = createSelector(
+    [selectLogs],
+    (logs) => {
+        const userMap = new Map();
+        logs.forEach(log => {
+            if (!userMap.has(log.userId)) {
+                userMap.set(log.userId, {
+                    userId: log.userId,
+                    userName: log.userName,
+                    userEmail: log.userEmail,
+                    userAvatar: log.userAvatar
+                });
+            }
+        });
+        return Array.from(userMap.values());
+    }
+);
+
+export const selectUserStatistics = createSelector(
+    [selectLogs],
+    (logs) => {
+        const userStats = new Map();
+        
+        logs.forEach(log => {
+            if (!userStats.has(log.userId)) {
+                userStats.set(log.userId, {
+                    userId: log.userId,
+                    userName: log.userName,
+                    userEmail: log.userEmail,
+                    userAvatar: log.userAvatar,
+                    requests: [],
+                    modelUsage: new Map(),
+                    lastActivity: log.createdAt
+                });
+            }
+            
+            const user = userStats.get(log.userId);
+            user.requests.push(log);
+            user.modelUsage.set(log.modelName, (user.modelUsage.get(log.modelName) || 0) + 1);
+            
+            if (new Date(log.createdAt) > new Date(user.lastActivity)) {
+                user.lastActivity = log.createdAt;
+            }
+        });
+
+        return Array.from(userStats.values()).map(user => {
+            const totalRequests = user.requests.length;
+            const averageResponseTime = user.requests.reduce((sum: number, log: any) => sum + log.responseTime, 0) / totalRequests;
+            const averageQualityScore = user.requests.reduce((sum: number, log: any) => sum + log.qualityScore, 0) / totalRequests;
+            const totalTokens = user.requests.reduce((sum: number, log: any) => sum + log.tokenCount, 0);
+            
+            const ratedLogs = user.requests.filter((log: any) => log.userRating !== null);
+            const positiveRatings = ratedLogs.filter((log: any) => log.userRating === 'like').length;
+            const userSatisfactionRate = ratedLogs.length > 0 ? (positiveRatings / ratedLogs.length) * 100 : 0;
+            
+            const modelUsageArray = Array.from(user.modelUsage.entries()) as [string, number][];
+            const favoriteModel = modelUsageArray.length > 0 
+                ? modelUsageArray.sort((a, b) => b[1] - a[1])[0][0] 
+                : 'Unknown';
+
+            return {
+                userId: user.userId,
+                userName: user.userName,
+                userEmail: user.userEmail,
+                userAvatar: user.userAvatar,
+                totalRequests,
+                averageResponseTime: Math.round(averageResponseTime),
+                averageQualityScore: Math.round(averageQualityScore * 100) / 100,
+                totalTokens,
+                userSatisfactionRate: Math.round(userSatisfactionRate * 100) / 100,
+                lastActivity: user.lastActivity,
+                favoriteModel
+            };
+        }).sort((a, b) => b.totalRequests - a.totalRequests);
+    }
+);
+
+export const selectFilterByUser = (state: RootState) => state.logging.filterByUser;
+
+export const selectFilteredLogsByUser = createSelector(
+    [selectFilteredLogs, selectFilterByUser],
+    (logs, filterByUser) => {
+        if (!filterByUser) return logs;
+        return logs.filter(log => log.userId === filterByUser);
+    }
+);

@@ -8,6 +8,7 @@ interface LoggingState {
     error: string | null;
     selectedLogId: string | null;
     filterByModel: string | null;
+    filterByUser: string | null;
     filterByDateRange: {
         start: string | null;
         end: string | null;
@@ -27,6 +28,7 @@ const initialState: LoggingState = {
     error: null,
     selectedLogId: null,
     filterByModel: null,
+    filterByUser: null,
     filterByDateRange: {
         start: null,
         end: null
@@ -76,6 +78,11 @@ const loggingSlice = createSlice({
             state.filterByModel = action.payload;
         },
 
+        // Фильтрация по пользователю
+        setFilterByUser: (state, action: PayloadAction<string | null>) => {
+            state.filterByUser = action.payload;
+        },
+
         // Фильтрация по дате
         setFilterByDateRange: (state, action: PayloadAction<{ start: string | null; end: string | null }>) => {
             state.filterByDateRange = action.payload;
@@ -84,6 +91,7 @@ const loggingSlice = createSlice({
         // Очистка фильтров
         clearFilters: (state) => {
             state.filterByModel = null;
+            state.filterByUser = null;
             state.filterByDateRange = { start: null, end: null };
         },
 
@@ -128,6 +136,7 @@ export const {
     updateMetrics,
     setSelectedLogId,
     setFilterByModel,
+    setFilterByUser,
     setFilterByDateRange,
     clearFilters,
     setLoading,

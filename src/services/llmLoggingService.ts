@@ -5,6 +5,9 @@ import { ModelScoringService } from './modelScoringService';
 export interface LLMRequestLog {
     id: string;
     userId: string;
+    userName: string;
+    userEmail: string;
+    userAvatar?: string;
     prompt: string;
     promptTime: string;
     responseTime: number;
@@ -34,6 +37,9 @@ export class LLMLoggingService {
      */
     static logRequest({
         userId,
+        userName,
+        userEmail,
+        userAvatar,
         prompt,
         response,
         modelName,
@@ -41,6 +47,9 @@ export class LLMLoggingService {
         userRating
     }: {
         userId: string;
+        userName: string;
+        userEmail: string;
+        userAvatar?: string;
         prompt: string;
         response: ModelResponse;
         modelName: string;
@@ -50,6 +59,9 @@ export class LLMLoggingService {
         const log: LLMRequestLog = {
             id: this.generateLogId(),
             userId,
+            userName,
+            userEmail,
+            userAvatar,
             prompt,
             promptTime: new Date().toISOString(),
             responseTime: response.responseTime,
@@ -157,6 +169,95 @@ export class LLMLoggingService {
         );
         
         this.saveLogsToStorage();
+    }
+
+    /**
+     * Получение уникальных пользователей
+     */
+    static getUniqueUsers(): Array<{userId: string, userName: string, userEmail: string, userAvatar?: string}> {
+        const userMap = new Map();
+        this.logs.forEach(log => {
+            if (!userMap.has(log.userId)) {
+                userMap.set(log.userId, {
+                    userId: log.userId,
+                    userName: log.userName,
+                    userEmail: log.userEmail,
+                    userAvatar: log.userAvatar
+                });
+            }
+        });
+        return Array.from(userMap.values());
+    }
+
+    /**
+     * Получение статистики по пользователям
+     */
+    static getUserStatistics(): Array<{
+        userId: string;
+        userName: string;
+        userEmail: string;
+        userAvatar?: string;
+        totalRequests: number;
+        averageResponseTime: number;
+        averageQualityScore: number;
+        totalTokens: number;
+        userSatisfactionRate: number;
+        lastActivity: string;
+        favoriteModel: string;
+    }> {
+        const userStats = new Map();
+        
+        this.logs.forEach(log => {
+            if (!userStats.has(log.userId)) {
+                userStats.set(log.userId, {
+                    userId: log.userId,
+                    userName: log.userName,
+                    userEmail: log.userEmail,
+                    userAvatar: log.userAvatar,
+                    requests: [],
+                    modelUsage: new Map(),
+                    lastActivity: log.createdAt
+                });
+            }
+            
+            const user = userStats.get(log.userId);
+            user.requests.push(log);
+            user.modelUsage.set(log.modelName, (user.modelUsage.get(log.modelName) || 0) + 1);
+            
+            if (new Date(log.createdAt) > new Date(user.lastActivity)) {
+                user.lastActivity = log.createdAt;
+            }
+        });
+
+        return Array.from(userStats.values()).map(user => {
+            const totalRequests = user.requests.length;
+            const averageResponseTime = user.requests.reduce((sum: number, log: LLMRequestLog) => sum + log.responseTime, 0) / totalRequests;
+            const averageQualityScore = user.requests.reduce((sum: number, log: LLMRequestLog) => sum + log.qualityScore, 0) / totalRequests;
+            const totalTokens = user.requests.reduce((sum: number, log: LLMRequestLog) => sum + log.tokenCount, 0);
+            
+            const ratedLogs = user.requests.filter((log: LLMRequestLog) => log.userRating !== null);
+            const positiveRatings = ratedLogs.filter((log: LLMRequestLog) => log.userRating === 'like').length;
+            const userSatisfactionRate = ratedLogs.length > 0 ? (positiveRatings / ratedLogs.length) * 100 : 0;
+            
+            const modelUsageArray = Array.from(user.modelUsage.entries()) as [string, number][];
+            const favoriteModel = modelUsageArray.length > 0 
+                ? modelUsageArray.sort((a, b) => b[1] - a[1])[0][0] 
+                : 'Unknown';
+
+            return {
+                userId: user.userId,
+                userName: user.userName,
+                userEmail: user.userEmail,
+                userAvatar: user.userAvatar,
+                totalRequests,
+                averageResponseTime: Math.round(averageResponseTime),
+                averageQualityScore: Math.round(averageQualityScore * 100) / 100,
+                totalTokens,
+                userSatisfactionRate: Math.round(userSatisfactionRate * 100) / 100,
+                lastActivity: user.lastActivity,
+                favoriteModel
+            };
+        }).sort((a, b) => b.totalRequests - a.totalRequests);
     }
 
     /**
