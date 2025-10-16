@@ -6,6 +6,7 @@ import {LoggingDashboard} from './components/LoggingDashboard';
 import {AdminDashboard} from './components/admin';
 import {SubscriptionDemo} from './components/subscription';
 import {B2BDemo} from './components/b2b';
+import {SSODemo} from './components/sso';
 import {useAppDispatch, useAppSelector} from './config/hooks.ts';
 import {loginFailure, logout, setUser} from './store/slice/userSlice.ts';
 import {authService} from "./services/authService.ts";
@@ -15,9 +16,9 @@ const AppContent: React.FC = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.user.currentUser);
     const isLoading = useAppSelector((state) => state.user.isLoading);
-    const [currentView, setCurrentView] = useState<'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b'>('chat');
+    const [currentView, setCurrentView] = useState<'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso'>('chat');
 
-    const handleViewChange = (view: 'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b') => {
+    const handleViewChange = (view: 'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso') => {
         setCurrentView(view);
     };
 
@@ -77,6 +78,8 @@ const AppContent: React.FC = () => {
                        setCurrentView('subscription');
                    } else if (path === '/b2b') {
                        setCurrentView('b2b');
+                   } else if (path === '/sso') {
+                       setCurrentView('sso');
                    } else {
                        setCurrentView('chat');
                    }
@@ -172,6 +175,10 @@ const AppContent: React.FC = () => {
 
            if (currentView === 'b2b') {
                return <B2BDemo />;
+           }
+
+           if (currentView === 'sso') {
+               return <SSODemo />;
            }
 
     return <Renderer/>;

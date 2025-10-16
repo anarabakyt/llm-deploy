@@ -43,7 +43,12 @@ export const Renderer: React.FC = () => {
 
     // Если пользователь не авторизован, показываем экран входа
     if (!user) {
-        return <LoginScreen onLogin={authService.signIn}/>;
+        return (
+            <LoginScreen 
+                onLogin={authService.signIn}
+                onSSOLogin={authService.signInWithSSO}
+            />
+        );
     }
 
     // todo установить в dispatch
