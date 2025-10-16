@@ -21,3 +21,7 @@ export {UserFilter} from './UserFilter';
 export {UserComparison} from './UserComparison';
 export {UserActivityChart} from './UserActivityChart';
 export * from './admin';
+export * from './subscription';
+export * from './b2b';
+export * from './sso';
+export * from './communication';
