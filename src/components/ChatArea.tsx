@@ -152,8 +152,9 @@ export const ChatArea: React.FC = () => {
             {/* Область сообщений */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 {messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                        <div className="text-center">
+                    <div className="w-full">
+                        {/* Header section */}
+                        <div className="text-center mb-8">
                             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -162,36 +163,37 @@ export const ChatArea: React.FC = () => {
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
                                 Compare AI Model Responses
                             </h3>
-                            <p className="text-gray-500 max-w-md">
+                            <p className="text-gray-500 max-w-md mx-auto">
                                 Ask a question and get responses from all available models to compare their quality and
                                 speed
                             </p>
+                        </div>
 
-                            {/* ===== ЗАГЛУШКА ДЛЯ ДЕМОНСТРАЦИИ RESPONSECARD ===== */}
-                            {/* Этот блок показывается только когда messages.length === 0 */}
-                            {/* Здесь находятся тестовые ResponseCard для демонстрации UI */}
-                            <div className="mt-8 max-w-4xl mx-auto">
-                                <div className="space-y-4">
-                                    {/* Тестовое сообщение пользователя */}
-                                    <div className="flex justify-end mb-4">
-                                        <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-500 text-white">
-                                            <p className="text-sm whitespace-pre-wrap">Привет! Как дела?</p>
-                                            <div className="flex items-center justify-between mt-1">
-                                                <span className="text-xs text-blue-100">
-                                                    {new Date().toLocaleTimeString()}
-                                                </span>
-                                            </div>
+                        {/* ===== ЗАГЛУШКА ДЛЯ ДЕМОНСТРАЦИИ RESPONSECARD ===== */}
+                        {/* Этот блок показывается только когда messages.length === 0 */}
+                        {/* Здесь находятся тестовые ResponseCard для демонстрации UI */}
+                        <div className="max-w-6xl mx-auto px-4">
+                            <div className="space-y-4">
+                                {/* Тестовое сообщение пользователя */}
+                                <div className="flex justify-end mb-4">
+                                    <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-500 text-white">
+                                        <p className="text-sm whitespace-pre-wrap">Привет! Как дела?</p>
+                                        <div className="flex items-center justify-between mt-1">
+                                            <span className="text-xs text-blue-100">
+                                                {new Date().toLocaleTimeString()}
+                                            </span>
                                         </div>
                                     </div>
+                                </div>
 
-                                    {/* Тестовые ответы моделей */}
+                                {/* Тестовые ответы моделей */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-gray-600">
+                                        Model responses:
+                                    </h4>
                                     <div className="space-y-3">
-                                        <h4 className="text-sm font-medium text-gray-600">
-                                            Model responses:
-                                        </h4>
-                                        <div className="space-y-3">
-                                            {/* ChatGPT Response */}
-                                            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                                        {/* ChatGPT Response */}
+                                        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
                                                 <div className="mb-3">
                                                     <div className="flex items-center justify-between">
                                                         <h3 className="font-semibold text-gray-800 text-lg">ChatGPT-4</h3>
@@ -416,7 +418,6 @@ export const ChatArea: React.FC = () => {
                             </div>
                             {/* ===== КОНЕЦ ЗАГЛУШКИ ===== */}
                         </div>
-                    </div>
                 ) : (
                     messages.map((message) => (
                         <div key={(message.id ? message.id : 'tmp') + (message?.chatLocalId ? message.chatLocalId : '')} className="space-y-4">
