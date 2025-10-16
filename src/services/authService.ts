@@ -1,9 +1,11 @@
 import type {User} from '../entities';
 import {firebaseService} from "./firebaseService.ts";
+import {ssoService} from "./ssoService.ts";
 
 class AuthService {
     async initialize(): Promise<void> {
         await firebaseService.initialize();
+        await ssoService.initialize();
     }
 
     // Проверка авторизации
@@ -75,6 +77,43 @@ class AuthService {
             window.dispatchEvent(new CustomEvent('authError', {detail: error}));
             throw error;
         }
+    }
+
+    // SSO аутентификация
+    async signInWithSSO(providerId: string, domain?: string): Promise<void> {
+        try {
+            const authUrl = await ssoService.initiateSSOLogin(providerId, domain);
+            
+            // Redirect to SSO provider
+            window.location.href = authUrl;
+        } catch (error) {
+            console.error('SSO authentication failed:', error);
+            window.dispatchEvent(new CustomEvent('authError', {detail: error}));
+            throw error;
+        }
+    }
+
+    // Обработка SSO callback
+    async handleSSOCallback(providerId: string, code: string, state: string): Promise<void> {
+        try {
+            const user = await ssoService.handleSSOCallback(providerId, code, state);
+
+            const token = `sso-${providerId}-token-${user.id}`;
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('userId', user.id);
+
+            window.dispatchEvent(new CustomEvent('authSuccess', {detail: user}));
+        } catch (error) {
+            console.error('SSO callback failed:', error);
+            window.dispatchEvent(new CustomEvent('authError', {detail: error}));
+            throw error;
+        }
+    }
+
+    // Получение доступных SSO провайдеров
+    getSSOProviders() {
+        return ssoService.getProviders();
     }
 }
 
