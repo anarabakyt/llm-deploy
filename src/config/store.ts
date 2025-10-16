@@ -4,6 +4,7 @@ import modelReducer from '../store/slice/modelSlice.ts';
 import chatReducer from '../store/slice/chatSlice.ts';
 import messageReducer from '../store/slice/messageSlice.ts';
 import loggingReducer from '../store/slice/loggingSlice.ts';
+import subscriptionReducer from '../store/slice/subscriptionSlice.ts';
 import {chatsApi, messagesApi, modelsApi} from '../services/rtk';
 
 export const store = configureStore({
@@ -13,6 +14,7 @@ export const store = configureStore({
         chats: chatReducer,
         messages: messageReducer,
         logging: loggingReducer,
+        subscription: subscriptionReducer,
         [modelsApi.reducerPath]: modelsApi.reducer,
         [chatsApi.reducerPath]: chatsApi.reducer,
         [messagesApi.reducerPath]: messagesApi.reducer,
