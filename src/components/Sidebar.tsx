@@ -91,6 +91,13 @@ export const Sidebar: React.FC = () => {
         console.log('==> Sidebar-handleSubscriptionClick: Navigated to subscription');
     };
 
+    const handleB2BClick = () => {
+        // Navigate to B2B page
+        window.history.pushState({}, '', '/b2b');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        console.log('==> Sidebar-handleB2BClick: Navigated to B2B');
+    };
+
     return (
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
             {/* Auto-selection mode selector */}
@@ -134,6 +141,19 @@ export const Sidebar: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
                     Subscription
+                </button>
+            </div>
+
+            {/* B2B Enterprise button */}
+            <div className="p-2 border-b border-gray-200">
+                <button
+                    onClick={handleB2BClick}
+                    className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                >
+                    <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    B2B Enterprise
                 </button>
             </div>
 
