@@ -11,6 +11,9 @@ interface ModelState {
     error: string | null;
     autoSelectionMode: AutoSelectionMode;
     modelScores: Record<string, { quality: number; tokenEfficiency: number; responseTime: number }>;
+    // UI-level selection control: best (quality), green (token efficient), or custom list
+    selectionMode: 'best' | 'green' | 'custom';
+    customSelectedModelIds: string[];
 }
 
 const initialState: ModelState = {
@@ -21,6 +24,8 @@ const initialState: ModelState = {
     error: null,
     autoSelectionMode: 'manual',
     modelScores: {},
+    selectionMode: 'best',
+    customSelectedModelIds: [],
 };
 
 const modelSlice = createSlice({
@@ -43,6 +48,23 @@ const modelSlice = createSlice({
         },
         setAutoSelectionMode: (state, action: PayloadAction<AutoSelectionMode>) => {
             state.autoSelectionMode = action.payload;
+        },
+        setSelectionMode: (state, action: PayloadAction<'best' | 'green' | 'custom'>) => {
+            state.selectionMode = action.payload;
+            // Map UI selection to autoSelectionMode
+            if (action.payload === 'best') {
+                state.autoSelectionMode = 'best_quality';
+            } else if (action.payload === 'green') {
+                state.autoSelectionMode = 'token_efficient';
+            } else {
+                state.autoSelectionMode = 'manual';
+            }
+        },
+        setCustomSelectedModelIds: (state, action: PayloadAction<string[]>) => {
+            state.customSelectedModelIds = action.payload;
+            // Ensure when user customizes, selection mode is custom and manual
+            state.selectionMode = 'custom';
+            state.autoSelectionMode = 'manual';
         },
         updateModelScore: (state, action: PayloadAction<{
             modelId: string;
@@ -92,6 +114,8 @@ export const {
     setModels,
     setSelectedModelId,
     setAutoSelectionMode,
+    setSelectionMode,
+    setCustomSelectedModelIds,
     updateModelScore,
     selectBestModel
 } = modelSlice.actions;

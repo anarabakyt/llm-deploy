@@ -4,7 +4,6 @@ import {useAppDispatch, useAppSelector} from '../config/hooks.ts';
 import {selectChats, selectMessagesByChat, selectModels, selectSelectedChatId} from '../store/selector/selectors.ts';
 import {setSelectedChatId, setSelectedChatLocalId} from '../store/slice/chatSlice.ts';
 import {SidebarModelItem} from './SidebarModelItem';
-import {AutoSelectionModeSelector} from './AutoSelectionModeSelector';
 import {setSelectedModelId} from "../store/slice/modelSlice.ts";
 import {MessageService} from "../services/messageService.ts";
 import {setChatMessages} from "../store/slice/messageSlice.ts";
@@ -122,11 +121,6 @@ export const Sidebar: React.FC = () => {
 
     return (
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-            {/* Auto-selection mode selector */}
-            <div className="p-2 border-b border-gray-200">
-                <AutoSelectionModeSelector />
-            </div>
-
             {/* Navigation Toggle */}
             <div className="p-2 border-b border-gray-200">
                 <button
