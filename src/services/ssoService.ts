@@ -46,7 +46,12 @@ class SSOService {
             // Load SSO configuration from backend
             const response = await fetch('/api/sso/config');
             if (response.ok) {
-                this.config = await response.json();
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    this.config = await response.json();
+                } else {
+                    console.warn('SSO config endpoint returned non-JSON response');
+                }
             }
         } catch (error) {
             console.error('Failed to initialize SSO service:', error);
@@ -87,6 +92,11 @@ class SSOService {
                 throw new Error('Failed to initiate SSO login');
             }
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('SSO login endpoint returned non-JSON response');
+            }
+
             const data = await response.json();
             return data.authUrl;
         } catch (error) {
@@ -114,6 +124,11 @@ class SSOService {
                 throw new Error('SSO callback failed');
             }
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('SSO callback endpoint returned non-JSON response');
+            }
+
             const data = await response.json();
             return data.user;
         } catch (error) {
@@ -130,6 +145,12 @@ class SSOService {
             
             if (!response.ok) {
                 throw new Error('Failed to fetch corporate users');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('Corporate users endpoint returned non-JSON response');
+                return [];
             }
 
             return await response.json();
@@ -152,6 +173,11 @@ class SSOService {
 
             if (!response.ok) {
                 throw new Error('User sync failed');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('User sync endpoint returned non-JSON response');
             }
 
             return await response.json();
@@ -267,6 +293,17 @@ class SSOService {
             
             if (!response.ok) {
                 throw new Error('Failed to fetch SSO statistics');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('SSO statistics endpoint returned non-JSON response');
+                return {
+                    totalUsers: 0,
+                    activeUsers: 0,
+                    providers: 0,
+                    lastSync: ''
+                };
             }
 
             return await response.json();
