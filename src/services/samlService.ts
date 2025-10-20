@@ -35,7 +35,12 @@ class SAMLService {
             // Load SAML configuration
             const response = await fetch(`/api/sso/saml/config/${providerId}`);
             if (response.ok) {
-                this.config = await response.json();
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    this.config = await response.json();
+                } else {
+                    console.warn('SAML config endpoint returned non-JSON response');
+                }
             }
         } catch (error) {
             console.error('Failed to initialize SAML service:', error);
@@ -59,6 +64,11 @@ class SAMLService {
 
             if (!response.ok) {
                 throw new Error('Failed to generate SAML auth request');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('SAML auth request endpoint returned non-JSON response');
             }
 
             const data = await response.json();
@@ -86,6 +96,11 @@ class SAMLService {
 
             if (!response.ok) {
                 throw new Error('Failed to process SAML response');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('SAML response processing endpoint returned non-JSON response');
             }
 
             return await response.json();

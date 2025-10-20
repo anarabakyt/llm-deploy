@@ -44,8 +44,13 @@ class OAuth2Service {
             // Load OAuth2 configuration
             const response = await fetch(`/api/sso/oauth2/config/${providerId}`);
             if (response.ok) {
-                const config = await response.json();
-                this.configs.set(providerId, config);
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const config = await response.json();
+                    this.configs.set(providerId, config);
+                } else {
+                    console.warn('OAuth2 config endpoint returned non-JSON response');
+                }
             }
         } catch (error) {
             console.error('Failed to initialize OAuth2 service:', error);
@@ -90,6 +95,11 @@ class OAuth2Service {
                 throw new Error('Failed to exchange code for token');
             }
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('OAuth2 token exchange endpoint returned non-JSON response');
+            }
+
             return await response.json();
         } catch (error) {
             console.error('OAuth2 token exchange failed:', error);
@@ -115,6 +125,11 @@ class OAuth2Service {
                 throw new Error('Failed to get user info');
             }
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('OAuth2 user info endpoint returned non-JSON response');
+            }
+
             return await response.json();
         } catch (error) {
             console.error('OAuth2 user info fetch failed:', error);
@@ -138,6 +153,11 @@ class OAuth2Service {
 
             if (!response.ok) {
                 throw new Error('Failed to refresh token');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('OAuth2 token refresh endpoint returned non-JSON response');
             }
 
             return await response.json();
