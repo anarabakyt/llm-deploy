@@ -28,7 +28,10 @@ export const sendMessageThunk = createAsyncThunk<
     console.log('==> messageThunk-handleSendMessage: selectedModelId: ', selectedModelId);
     console.log('==> messageThunk-handleSendMessage: selectedModelUrl: ', selectedModelUrl);
 
-    if (!messageText.trim() || !selectedModelId || !selectedModelUrl) {
+    const selectionMode = state.models.selectionMode;
+    const customSelectedModelIds = state.models.customSelectedModelIds;
+
+    if (!messageText.trim()) {
         console.log('==> messageThunk-handleSendMessage: return');
         return;
     }
@@ -70,11 +73,67 @@ export const sendMessageThunk = createAsyncThunk<
     }
 
     try {
-        const response = await MessageService.sendMessageToModels({
-            modelUrl: selectedModelUrl,
-            chatId: finalChatId!,
-            content: messageText,
-        });
+        // Custom mode: send to all selected models and aggregate
+        if (selectionMode === 'custom') {
+            const targetModels = state.models.models.filter(m => customSelectedModelIds.includes(m.id));
+            if (targetModels.length === 0) {
+                console.warn('No custom models selected');
+                return;
+            }
+
+            const responses = await Promise.allSettled(targetModels.map(m =>
+                MessageService.sendMessageToModels({
+                    modelUrl: m.modelUrl,
+                    chatId: finalChatId!,
+                    content: messageText,
+                })
+            ));
+
+            const successful = responses
+                .filter(r => r.status === 'fulfilled') as PromiseFulfilledResult<Message>[];
+
+            if (successful.length > 0) {
+                // Merge modelResponses into a single message
+                const merged: Message = {
+                    id: successful[0].value.id,
+                    chatId: finalChatId!,
+                    chatLocalId: finalLocalId,
+                    author: 'assistant',
+                    content: '',
+                    createdAt: new Date().toISOString(),
+                    modelResponses: successful.flatMap(s => s.value.modelResponses || []),
+                };
+
+                dispatch(addMessage(merged));
+
+                for (const s of successful) {
+                    if (s.value.modelResponses && s.value.modelResponses.length > 0) {
+                        for (const modelResponse of s.value.modelResponses) {
+                            const score = ModelScoringService.calculateModelScore(modelResponse);
+                            dispatch(updateModelScore({
+                                modelId: modelResponse.modelName,
+                                quality: score.quality,
+                                tokenEfficiency: score.tokenEfficiency,
+                                responseTime: score.responseTime
+                            }));
+                        }
+                    }
+                }
+            } else {
+                console.warn('All custom model requests failed');
+            }
+        } else {
+            // Best/Green/manual single target (selectedModelUrl)
+            if (!selectedModelId || !selectedModelUrl) {
+                console.log('==> messageThunk-handleSendMessage: no selected model URL');
+                return;
+            }
+
+            const response = await MessageService.sendMessageToModels({
+                modelUrl: selectedModelUrl,
+                chatId: finalChatId!,
+                content: messageText,
+            });
 
         console.log('==> messageThunk-handleSendMessage: response: ', response);
 
@@ -93,10 +152,11 @@ export const sendMessageThunk = createAsyncThunk<
             }
         }
 
-        // If auto-selection is enabled, select the best model for next time
-        const currentState = getState();
-        if (currentState.models.autoSelectionMode !== 'manual') {
-            dispatch(selectBestModel());
+            // If auto-selection is enabled, select the best model for next time
+            const currentState = getState();
+            if (currentState.models.autoSelectionMode !== 'manual') {
+                dispatch(selectBestModel());
+            }
         }
 
         // Логирование запроса к LLM

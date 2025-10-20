@@ -21,6 +21,9 @@ import { TokenUsageIndicator } from './TokenUsageIndicator';
 import type { Chat } from '../entities';
 import { setSelectedChatLocalId } from "../store/slice/chatSlice.ts";
 import { sendMessageThunk, sendMessageWithContextTransferThunk } from "../store/thunk/messageThunks.ts";
+import { useAppSelector as useSelector } from '../config/hooks.ts';
+import { setSelectionMode, setCustomSelectedModelIds } from '../store/slice/modelSlice.ts';
+import { selectModels } from '../store/selector/selectors.ts';
 
 export const ChatArea: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -30,12 +33,19 @@ export const ChatArea: React.FC = () => {
     const selectedChatName = useAppSelector(selectSelectedChatName);
     const selectedModelId = useAppSelector(selectSelectedModelId);
     const isLoading = useAppSelector(selectMessagesLoading);
+    const models = useAppSelector(selectModels);
+    const selectionMode = useSelector((s) => s.models.selectionMode);
+    const customSelectedModelIds = useSelector((s) => s.models.customSelectedModelIds);
 
     const [newChat, setNewChat] = useState<Chat | null>(null);
     const [showLLMSelector, setShowLLMSelector] = useState(false);
     const [contextTransferMode, setContextTransferMode] = useState<'next' | 'conversation' | null>(null);
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [showContextSelector, setShowContextSelector] = useState(false);
+  const [showLLMMenu, setShowLLMMenu] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [hasChosenMode, setHasChosenMode] = useState(false);
+  const [showMoreModels, setShowMoreModels] = useState(false);
 
     useEffect(() => {
         console.log('==> ChatArea: selectedChatId: ', selectedChatId);
@@ -89,6 +99,24 @@ export const ChatArea: React.FC = () => {
 
         console.log('==> ChatArea-handleSendMessage: setNewChat');
         setNewChat(null);
+    };
+
+    const handleFileAttach = (file: File) => {
+        console.log('==> ChatArea-handleFileAttach: file: ', file.name, file.size);
+        // TODO: Implement file processing logic
+        // For now, just log the file info
+        alert(`File attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+    };
+
+    // LLM selection handlers
+    const handleSelectionModeChange = (mode: 'best' | 'green' | 'custom') => {
+        setHasChosenMode(true);
+        dispatch(setSelectionMode(mode));
+    };
+    const handleToggleCustomModel = (modelId: string) => {
+        const set = new Set(customSelectedModelIds);
+        if (set.has(modelId)) set.delete(modelId); else set.add(modelId);
+        dispatch(setCustomSelectedModelIds(Array.from(set)));
     };
 
     const handleLLMChange = (modelId: string, scope: 'next' | 'conversation') => {
@@ -463,11 +491,215 @@ export const ChatArea: React.FC = () => {
 
             {/* Поле ввода */}
             <div className="flex-shrink-0">
-                <ChatInput
-                    onSendMessage={handleSendMessage}
-                    disabled={isLoading}
-                    placeholder="Ask a question to compare responses from all models..."
-                />
+                <div className="relative">
+                    <ChatInput
+                        onSendMessage={handleSendMessage}
+                        onFileAttach={handleFileAttach}
+                        disabled={isLoading}
+                        placeholder="Ask a question to compare responses from all models..."
+                    />
+                    {/* Compact dropdown positioned bottom-right over input area */}
+                    <div className="absolute bottom-6 right-16">
+                        <div className="relative inline-block">
+                            <button
+                                onClick={() => setShowModelDropdown(!showModelDropdown)}
+                                className="inline-flex items-center px-3 py-2 rounded-md bg-white text-sm text-gray-700 hover:bg-[#e8eaed] border border-transparent hover:border-transparent focus:border-transparent active:border-transparent focus:outline-none focus:ring-0"
+                                aria-expanded={showModelDropdown}
+                            >
+                                <span className="mr-2">
+                                    {!hasChosenMode && 'Pick LLM'}
+                                    {hasChosenMode && selectionMode==='best' && 'Best'}
+                                    {hasChosenMode && selectionMode==='green' && 'Green'}
+                                    {hasChosenMode && selectionMode==='custom' && (
+                                        customSelectedModelIds.length > 0 
+                                            ? customSelectedModelIds.map(id => {
+                                                if (id === 'claude-3') return 'Claude';
+                                                if (id === 'perplexity') return 'Perplexity';
+                                                // For dynamic models, try to get the name
+                                                const model = models.find(m => m.id === id);
+                                                return model?.name || id;
+                                            }).join(', ')
+                                            : 'Selected'
+                                    )}
+                                </span>
+                                <svg className={`w-4 h-4 text-gray-500 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            {showModelDropdown && (
+                                <div className="absolute right-0 bottom-full mb-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                                    {/* Best */}
+                                    <button
+                                        onClick={() => { if (!((selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='green'))) { handleSelectionModeChange('best'); setShowModelDropdown(false); } }}
+                                        disabled={(selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='green')}
+                                        className={`w-full text-left px-4 py-3 ${((selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='green')) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#e8eaed]'} ${hasChosenMode && selectionMode==='best' ? 'bg-blue-50' : ''}`}
+                                        aria-disabled={(selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='green')}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">Best</div>
+                                                <div className="text-xs text-gray-500">Smartest for everyday tasks</div>
+                                            </div>
+                                            {hasChosenMode && selectionMode==='best' && (
+                                                <svg className="w-5 h-5 text-blue-600 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                                            )}
+                                        </div>
+                                    </button>
+                                    {/* Green */}
+                                    <button
+                                        onClick={() => { if (!((selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='best'))) { handleSelectionModeChange('green'); setShowModelDropdown(false); } }}
+                                        disabled={(selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='best')}
+                                        className={`w-full text-left px-4 py-3 ${((selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='best')) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#e8eaed]'} ${hasChosenMode && selectionMode==='green' ? 'bg-green-50' : ''}`}
+                                        aria-disabled={(selectionMode==='custom' && customSelectedModelIds.length>0) || (hasChosenMode && selectionMode==='best')}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">Green</div>
+                                                <div className="text-xs text-gray-500">Fastest for quick answers</div>
+                                            </div>
+                                            {hasChosenMode && selectionMode==='green' && (
+                                                <svg className="w-5 h-5 text-green-600 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                                            )}
+                                        </div>
+                                    </button>
+                                    <div className="border-t border-gray-200"/>
+                                    {/* More models row with hover submenu */}
+                                    <div
+                                        className={`relative w-full text-left px-4 py-3 ${((hasChosenMode && selectionMode==='best') || (hasChosenMode && selectionMode==='green')) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#e8eaed]'}`}
+                                        onMouseEnter={() => { 
+                                            console.log('More models hover enter'); 
+                                            if (!((hasChosenMode && selectionMode==='best') || (hasChosenMode && selectionMode==='green'))) {
+                                                setShowMoreModels(true);
+                                            }
+                                        }}
+                                        onMouseLeave={() => {
+                                            console.log('More models hover leave');
+                                            setShowMoreModels(false);
+                                        }}
+                                        onClick={() => { 
+                                            // Don't change selection mode on click, just show submenu
+                                            console.log('More models clicked');
+                                        }}
+                                        aria-disabled={(hasChosenMode && selectionMode==='best') || (hasChosenMode && selectionMode==='green')}
+                                        role="button"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">More models</div>
+                                                <div className="text-xs text-gray-500">Choose specific LLMs</div>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                {(selectionMode==='custom' && customSelectedModelIds.length>0) && (
+                                                    <svg className="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                                                )}
+                                                <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                                            </div>
+                                        </div>
+
+                                        {showMoreModels && !((hasChosenMode && selectionMode==='best') || (hasChosenMode && selectionMode==='green')) && (
+                                            <div className="absolute right-full bottom-0 mr-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-2"
+                                                 onMouseEnter={() => {
+                                                     console.log('Submenu hover enter');
+                                                     setShowMoreModels(true);
+                                                 }}
+                                                 onMouseLeave={() => {
+                                                     console.log('Submenu hover leave');
+                                                     setShowMoreModels(false);
+                                                 }}>
+                                                {/* Debug: Show all models */}
+                                                <div className="text-xs text-gray-400 mb-2">Available models: {models.length}</div>
+                                                
+                                                {/* All models checkbox */}
+                                                <label className="flex items-center justify-between text-sm text-gray-700 rounded-md px-2 py-2 hover:bg-[#e8eaed] border-b border-gray-200">
+                                                    <div className="flex items-center space-x-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded"
+                                                            checked={customSelectedModelIds.length > 0 && customSelectedModelIds.length === (models.length + 2)}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                if (selectionMode !== 'custom') handleSelectionModeChange('custom');
+                                                                if (e.target.checked) {
+                                                                    // Select all models
+                                                                    const allModelIds = ['claude-3', 'perplexity', ...models.map(m => m.id)];
+                                                                    dispatch(setCustomSelectedModelIds(allModelIds));
+                                                                } else {
+                                                                    // Deselect all
+                                                                    dispatch(setCustomSelectedModelIds([]));
+                                                                }
+                                                                setShowModelDropdown(false);
+                                                            }}
+                                                        />
+                                                        <span className="font-medium">All</span>
+                                                    </div>
+                                                </label>
+                                                
+                                                {/* Hardcoded Claude and Perplexity for testing */}
+                                                <label className="flex items-center justify-between text-sm text-gray-700 rounded-md px-2 py-2 hover:bg-[#e8eaed]">
+                                                    <div className="flex items-center space-x-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded"
+                                                            checked={customSelectedModelIds.includes('claude-3')}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                if (selectionMode !== 'custom') handleSelectionModeChange('custom');
+                                                                handleToggleCustomModel('claude-3');
+                                                                setShowModelDropdown(false);
+                                                            }}
+                                                        />
+                                                        <span>Claude-3</span>
+                                                    </div>
+                                                </label>
+                                                
+                                                <label className="flex items-center justify-between text-sm text-gray-700 rounded-md px-2 py-2 hover:bg-[#e8eaed]">
+                                                    <div className="flex items-center space-x-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded"
+                                                            checked={customSelectedModelIds.includes('perplexity')}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                if (selectionMode !== 'custom') handleSelectionModeChange('custom');
+                                                                handleToggleCustomModel('perplexity');
+                                                                setShowModelDropdown(false);
+                                                            }}
+                                                        />
+                                                        <span>Perplexity</span>
+                                                    </div>
+                                                </label>
+                                                
+                                                {/* Dynamic models from API */}
+                                                {models.filter(m => {
+                                                    const label = String(m?.name ?? m?.id ?? '').toLowerCase();
+                                                    return label.includes('claude') || label.includes('perplexity');
+                                                }).map((m) => (
+                                                    <label key={m.id} className="flex items-center justify-between text-sm text-gray-700 rounded-md px-2 py-2 hover:bg-[#e8eaed]">
+                                                        <div className="flex items-center space-x-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="rounded"
+                                                                checked={customSelectedModelIds.includes(m.id)}
+                                                                onChange={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (selectionMode !== 'custom') handleSelectionModeChange('custom');
+                                                                    handleToggleCustomModel(m.id);
+                                                                    setShowModelDropdown(false);
+                                                                }}
+                                                            />
+                                                            <span>{m?.name || m?.id || 'Unknown model'}</span>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                                {customSelectedModelIds.length===0 && (
+                                                    <div className="mt-1 text-xs text-gray-500 px-2 py-1">Select at least one LLM.</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Mid-conversation LLM Selector Modal */}
