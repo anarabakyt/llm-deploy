@@ -9,6 +9,7 @@ import {B2BDemo} from './components/b2b';
 import {SSODemo} from './components/sso';
 import {CommunicationDemo} from './components/communication';
 import {AppStoreDemo} from './components/appstore';
+import {Settings} from './components/Settings';
 import {useAppDispatch, useAppSelector} from './config/hooks.ts';
 import {loginFailure, logout, setUser} from './store/slice/userSlice.ts';
 import {authService} from "./services/authService.ts";
@@ -18,10 +19,10 @@ const AppContent: React.FC = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.user.currentUser);
     const isLoading = useAppSelector((state) => state.user.isLoading);
-    const [currentView, setCurrentView] = useState<'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication' | 'appstore'>('chat');
+    const [currentView, setCurrentView] = useState<'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication' | 'appstore' | 'settings'>('chat');
     
 
-    const handleViewChange = (view: 'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication' | 'appstore') => {
+    const handleViewChange = (view: 'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication' | 'appstore' | 'settings') => {
         setCurrentView(view);
     };
 
@@ -73,6 +74,7 @@ const AppContent: React.FC = () => {
     useEffect(() => {
         const handlePopState = () => {
             const path = window.location.pathname;
+            console.log('==> App-handlePopState: Current path:', path);
             if (path === '/analytics') {
                 setCurrentView('analytics');
             } else if (path === '/admin') {
@@ -87,6 +89,9 @@ const AppContent: React.FC = () => {
                        setCurrentView('communication');
                    } else if (path === '/appstore') {
                        setCurrentView('appstore');
+                   } else if (path === '/settings') {
+                       console.log('==> App-handlePopState: Setting view to settings');
+                       setCurrentView('settings');
                    } else {
                        setCurrentView('chat');
                    }
@@ -194,6 +199,14 @@ const AppContent: React.FC = () => {
 
            if (currentView === 'appstore') {
                return <AppStoreDemo />;
+           }
+
+           if (currentView === 'settings') {
+               return <Settings 
+                   onNewChat={() => handleViewChange('chat')}
+                   onBackToChat={() => handleViewChange('chat')}
+                   onProfileClick={() => handleViewChange('settings')}
+               />;
            }
 
     return <Renderer/>;

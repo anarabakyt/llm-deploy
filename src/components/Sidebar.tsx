@@ -8,6 +8,7 @@ import {setSelectedModelId} from "../store/slice/modelSlice.ts";
 import {MessageService} from "../services/messageService.ts";
 import {setChatMessages} from "../store/slice/messageSlice.ts";
 import type {Message} from "../entities";
+import {UserProfileMenu} from './UserProfileMenu';
 
 export const Sidebar: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -44,6 +45,7 @@ export const Sidebar: React.FC = () => {
 
     const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
     const [isNavigationExpanded, setIsNavigationExpanded] = useState(false);
+    const [showUserProfileMenu, setShowUserProfileMenu] = useState(false);
 
     const handleToggleModel = (modelId: string) => {
         const newExpandedModelsSet = new Set(expandedModels);
@@ -117,6 +119,15 @@ export const Sidebar: React.FC = () => {
         window.history.pushState({}, '', '/appstore');
         window.dispatchEvent(new PopStateEvent('popstate'));
         console.log('==> Sidebar-handleAppStoreClick: Navigated to App Store');
+    };
+
+    const handleSettingsClick = () => {
+        console.log('==> Sidebar-handleSettingsClick: Starting navigation to Settings');
+        window.history.pushState({}, '', '/settings');
+        console.log('==> Sidebar-handleSettingsClick: History pushed');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        console.log('==> Sidebar-handleSettingsClick: PopStateEvent dispatched');
+        console.log('==> Sidebar-handleSettingsClick: Navigated to Settings');
     };
 
     return (
@@ -266,6 +277,32 @@ export const Sidebar: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* User Profile Button - Bottom Left */}
+            <div className="p-4 border-t border-gray-200">
+                <button
+                    onClick={() => setShowUserProfileMenu(!showUserProfileMenu)}
+                    className="w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                    <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">A</span>
+                    </div>
+                    <div className="flex-1 text-left">
+                        <div className="text-sm font-medium text-gray-900">Anara</div>
+                        <div className="text-xs text-gray-500">Free plan</div>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+
+            {/* User Profile Menu */}
+            <UserProfileMenu 
+                isOpen={showUserProfileMenu}
+                onClose={() => setShowUserProfileMenu(false)}
+                onSettingsClick={handleSettingsClick}
+            />
         </div>
     );
 };

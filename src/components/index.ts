@@ -19,6 +19,8 @@ export {UserStats} from './UserStats';
 export {UserFilter} from './UserFilter';
 export {UserComparison} from './UserComparison';
 export {UserActivityChart} from './UserActivityChart';
+export {UserProfileMenu} from './UserProfileMenu';
+export {Settings} from './Settings';
 export * from './admin';
 export * from './subscription';
 export * from './b2b';
