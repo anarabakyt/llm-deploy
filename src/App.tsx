@@ -8,6 +8,7 @@ import {SubscriptionDemo} from './components/subscription';
 import {B2BDemo} from './components/b2b';
 import {SSODemo} from './components/sso';
 import {CommunicationDemo} from './components/communication';
+import {AppStoreDemo} from './components/appstore';
 import {useAppDispatch, useAppSelector} from './config/hooks.ts';
 import {loginFailure, logout, setUser} from './store/slice/userSlice.ts';
 import {authService} from "./services/authService.ts";
@@ -17,10 +18,10 @@ const AppContent: React.FC = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.user.currentUser);
     const isLoading = useAppSelector((state) => state.user.isLoading);
-    const [currentView, setCurrentView] = useState<'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication'>('chat');
+    const [currentView, setCurrentView] = useState<'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication' | 'appstore'>('chat');
     
 
-    const handleViewChange = (view: 'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication') => {
+    const handleViewChange = (view: 'chat' | 'analytics' | 'admin' | 'subscription' | 'b2b' | 'sso' | 'communication' | 'appstore') => {
         setCurrentView(view);
     };
 
@@ -84,6 +85,8 @@ const AppContent: React.FC = () => {
                        setCurrentView('sso');
                    } else if (path === '/communication') {
                        setCurrentView('communication');
+                   } else if (path === '/appstore') {
+                       setCurrentView('appstore');
                    } else {
                        setCurrentView('chat');
                    }
@@ -187,6 +190,10 @@ const AppContent: React.FC = () => {
 
            if (currentView === 'communication') {
                return <CommunicationDemo />;
+           }
+
+           if (currentView === 'appstore') {
+               return <AppStoreDemo />;
            }
 
     return <Renderer/>;
