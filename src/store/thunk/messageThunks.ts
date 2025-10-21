@@ -129,15 +129,30 @@ export const sendMessageThunk = createAsyncThunk<
                 return;
             }
 
+           
             const response = await MessageService.sendMessageToModels({
-                modelUrl: selectedModelUrl,
-                chatId: finalChatId!,
-                content: messageText,
-            });
+    modelUrl: selectedModelUrl,
+    chatId: finalChatId!,
+    content: messageText,
+});
 
-        console.log('==> messageThunk-handleSendMessage: response: ', response);
+console.log('==> messageThunk-handleSendMessage: response: ', response);
 
-        dispatch(addMessage({...response, chatLocalId: finalLocalId}));
+dispatch(addMessage({...response, chatLocalId: finalLocalId}));
+            if (state.user.currentUser && response.modelResponses && response.modelResponses.length > 0) {
+    const modelResponseToLog = response.modelResponses[0];
+    const log = LLMLoggingService.logRequest({
+        userId: state.user.currentUser.id,
+        userName: state.user.currentUser.name,
+        userEmail: state.user.currentUser.email,
+        userAvatar: state.user.currentUser.avatarUrl,
+        prompt: messageText,
+        response: modelResponseToLog,
+        modelName: modelResponseToLog.modelName,
+        chatId: finalChatId!,
+    });
+    dispatch(addLog(log));
+}
 
         // Update model scores based on responses
         if (response.modelResponses && response.modelResponses.length > 0) {
