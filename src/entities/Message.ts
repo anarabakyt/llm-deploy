@@ -1,6 +1,6 @@
 import type {ModelResponse} from './ModelResponse';
 
-export type MessageAuthor = 'user' | 'model';
+export type MessageAuthor = 'user' | 'model' | 'assistant';
 
 export interface Message {
     id: string | null;
