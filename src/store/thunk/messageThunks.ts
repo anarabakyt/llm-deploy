@@ -154,25 +154,23 @@ dispatch(addMessage({...response, chatLocalId: finalLocalId}));
     dispatch(addLog(log));
 }
 
-        // Update model scores based on responses
-        if (response.modelResponses && response.modelResponses.length > 0) {
-            for (const modelResponse of response.modelResponses) {
-                const score = ModelScoringService.calculateModelScore(modelResponse);
-                dispatch(updateModelScore({
-                    modelId: modelResponse.modelName,
-                    quality: score.quality,
-                    tokenEfficiency: score.tokenEfficiency,
-                    responseTime: score.responseTime
-                }));
-            }
-        }
+if (response.modelResponses && response.modelResponses.length > 0) {
+    for (const modelResponse of response.modelResponses) {
+        const score = ModelScoringService.calculateModelScore(modelResponse);
+        dispatch(updateModelScore({
+            modelId: modelResponse.modelName,
+            quality: score.quality,
+            tokenEfficiency: score.tokenEfficiency,
+            responseTime: score.responseTime
+        }));
+    }
+}
 
-            // If auto-selection is enabled, select the best model for next time
-            const currentState = getState();
-            if (currentState.models.autoSelectionMode !== 'manual') {
-                dispatch(selectBestModel());
-            }
-        }
+// If auto-selection is enabled, select the best model for next time
+const currentState = getState();
+if (currentState.models.autoSelectionMode !== 'manual') {
+    dispatch(selectBestModel());
+}
 
         // Логирование запроса к LLM
         if (state.user.currentUser && response.modelResponses && response.modelResponses.length > 0) {
