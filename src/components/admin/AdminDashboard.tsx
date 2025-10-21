@@ -30,7 +30,8 @@ export const AdminDashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="flex">
-                <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+                <AdminSidebar activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as AdminTab)} />
+                //<AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
                 <div className="flex-1 p-6">
                     {renderContent()}
                 </div>
